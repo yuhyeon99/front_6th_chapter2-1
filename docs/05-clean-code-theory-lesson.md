@@ -56,10 +56,10 @@ class ShoppingCart {
 ```javascript
 // ❌ 나쁜 예
 var p, q, amt, sel, tgt;
-const PRODUCT_ONE = "p1",
-  PRODUCT_TWO = "p2",
-  p3_id = "p3";
-let p4 = "p4",
+const PRODUCT_ONE = 'p1',
+  PRODUCT_TWO = 'p2',
+  p3_id = 'p3';
+let p4 = 'p4',
   productFive = `p5`; // 일관성 없는 선언과 네이밍
 ```
 
@@ -164,10 +164,10 @@ function calcCart() {
   totalAmt += itemTot * (1 - disc);
 
   // DOM 직접 조작
-  elem.style.fontWeight = q >= 10 ? "bold" : "normal";
+  elem.style.fontWeight = q >= 10 ? 'bold' : 'normal';
 
   // 콘솔 로깅
-  console.log("할인 적용: " + curItem.name);
+  console.log('할인 적용: ' + curItem.name);
 }
 ```
 

@@ -133,7 +133,7 @@ var lastSel,
 ```javascript
 // DOM의 수량과 prodList의 재고가 따로 관리
 qtyElem.textContent = newQty;
-itemToAdd["q"]--; // 동기화 안 됨
+itemToAdd['q']--; // 동기화 안 됨
 ```
 
 ---
@@ -167,8 +167,8 @@ itemToAdd["q"]--; // 동기화 안 됨
 
 ```javascript
 var prodList, sel, addBtn; // var, 콤마 구분
-const PRODUCT_ONE = "p1"; // const, 대문자
-let p4 = "p4"; // let, 쌍따옴표
+const PRODUCT_ONE = 'p1'; // const, 대문자
+let p4 = 'p4'; // let, 쌍따옴표
 productFive = `p5`; // 템플릿 리터럴
 ```
 
@@ -221,8 +221,8 @@ function updateSelOpts() {
 
 ```javascript
 // null 체크 누락
-var totalDiv = sum.querySelector(".text-2xl");
-totalDiv.textContent = "₩" + Math.round(totalAmt); // totalDiv가 null이면?
+var totalDiv = sum.querySelector('.text-2xl');
+totalDiv.textContent = '₩' + Math.round(totalAmt); // totalDiv가 null이면?
 
 // 배열 접근 시 경계 체크 없음
 var luckyItem = prodList[luckyIdx]; // prodList가 비어있으면?

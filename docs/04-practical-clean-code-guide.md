@@ -37,7 +37,7 @@ function calcCart() {
   // cartItems를 바로 사용
   for (const item of cartItems) {
     const quantity = parseInt(
-      item.querySelector(".quantity-number").textContent,
+      item.querySelector('.quantity-number').textContent
     );
     const price = getProductPrice(item.id);
     subtotal += quantity * price;
@@ -70,13 +70,13 @@ function processCart() {
   if (quantity > 10) discount = 0.1;
 
   // 갑자기 DOM 조작
-  document.getElementById("loading").style.display = "none";
+  document.getElementById('loading').style.display = 'none';
 
   // 다시 할인 계산
   if (isTuesday()) discount += 0.1;
 
   // 또 DOM 조작
-  document.getElementById("total").textContent = total;
+  document.getElementById('total').textContent = total;
 
   // 다시 비즈니스 로직
   var points = calculatePoints(total);
@@ -167,16 +167,16 @@ function addToCart(productId) {
   const product = findProduct(productId);
 
   // 저수준: DOM 조작 디테일
-  const div = document.createElement("div");
-  div.className = "cart-item";
+  const div = document.createElement('div');
+  div.className = 'cart-item';
   div.innerHTML = `<span>${product.name}</span>`;
 
   // 중간 수준: 계산
   const price = product.price * (1 - discount);
 
   // 초저수준: 스타일 조작
-  div.style.backgroundColor = "#f0f0f0";
-  div.style.padding = "10px";
+  div.style.backgroundColor = '#f0f0f0';
+  div.style.padding = '10px';
 }
 ```
 
@@ -194,8 +194,8 @@ function addToCart(productId) {
 
 // 세부 구현은 각자의 함수에서
 function createCartItem(product) {
-  const element = document.createElement("div");
-  element.className = "cart-item";
+  const element = document.createElement('div');
+  element.className = 'cart-item';
   element.innerHTML = renderCartItemTemplate(product);
   applyCartItemStyles(element);
   return element;
@@ -404,13 +404,13 @@ if (quantity >= BULK_DISCOUNT_THRESHOLD) {
 ```javascript
 function processOrder() {
   const today = new Date();
-  const total = document.getElementById("total").textContent;
+  const total = document.getElementById('total').textContent;
 
   if (today.getDay() === 2) {
-    fetch("/api/discount")
+    fetch('/api/discount')
       .then((res) => res.json())
       .then((discount) => {
-        document.getElementById("final").textContent = total * discount;
+        document.getElementById('final').textContent = total * discount;
       });
   }
 }

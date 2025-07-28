@@ -17,10 +17,10 @@ var lastSel,
   itemCnt = 0;
 
 // 47-48번 줄: const, let 혼용
-const PRODUCT_ONE = "p1",
-  PRODUCT_TWO = "p2",
-  p3_id = "p3";
-let p4 = "p4",
+const PRODUCT_ONE = 'p1',
+  PRODUCT_TWO = 'p2',
+  p3_id = 'p3';
+let p4 = 'p4',
   productFive = `p5`;
 ```
 
@@ -49,9 +49,9 @@ var curItem, qtyElem, itemTot, disc;
 
 ```javascript
 // 다양한 네이밍 스타일 혼재
-const PRODUCT_ONE = "p1"; // UPPER_SNAKE_CASE
-let productFive = "p5"; // camelCase
-var p3_id = "p3"; // snake_case
+const PRODUCT_ONE = 'p1'; // UPPER_SNAKE_CASE
+let productFive = 'p5'; // camelCase
+var p3_id = 'p3'; // snake_case
 var totalAmt = 0; // 축약어 사용
 ```
 
@@ -136,9 +136,9 @@ function getTotalStock() {
 
 ```javascript
 // 여러 곳에서 반복되는 패턴
-document.getElementById("loyalty-points").textContent = "...";
-document.getElementById("loyalty-points").style.display = "block";
-document.getElementById("loyalty-points").innerHTML = "...";
+document.getElementById('loyalty-points').textContent = '...';
+document.getElementById('loyalty-points').style.display = 'block';
+document.getElementById('loyalty-points').innerHTML = '...';
 ```
 
 ## 4. 매직 넘버와 하드코딩
@@ -158,9 +158,9 @@ setInterval(function () {}, 30000); // 30000의 의미?
 ### 4.2 하드코딩된 할인율
 
 ```javascript
-if (productId === "p1") return 0.1; // 10%
-if (productId === "p2") return 0.15; // 15%
-if (productId === "p3") return 0.2; // 20%
+if (productId === 'p1') return 0.1; // 10%
+if (productId === 'p2') return 0.15; // 15%
+if (productId === 'p3') return 0.2; // 20%
 luckyItem.val = Math.round(luckyItem.originalVal * 0.8); // 20% 할인
 ```
 
@@ -185,7 +185,7 @@ bonusPts = finalPoints;
 // 같은 정보를 여러 곳에서 중복 관리
 // DOM의 수량과 prodList의 재고가 따로 관리됨
 qtyElem.textContent = newQty;
-itemToAdd["q"]--;
+itemToAdd['q']--;
 ```
 
 ## 6. 비즈니스 로직과 UI의 혼재
@@ -198,13 +198,13 @@ function calcCart() {
   totalAmt += itemTot * (1 - disc);
 
   // DOM 조작
-  elem.style.fontWeight = q >= 10 ? "bold" : "normal";
+  elem.style.fontWeight = q >= 10 ? 'bold' : 'normal';
 
   // 로깅
-  console.log("할인 적용: " + curItem.name);
+  console.log('할인 적용: ' + curItem.name);
 
   // UI 업데이트
-  document.getElementById("item-count").textContent = "...";
+  document.getElementById('item-count').textContent = '...';
 }
 ```
 
@@ -214,9 +214,9 @@ function calcCart() {
 
 ```javascript
 // DOM 요소가 없을 수 있음
-var totalDiv = sum.querySelector(".text-2xl");
+var totalDiv = sum.querySelector('.text-2xl');
 if (totalDiv) {
-  totalDiv.textContent = "₩" + Math.round(totalAmt).toLocaleString();
+  totalDiv.textContent = '₩' + Math.round(totalAmt).toLocaleString();
 }
 // 하지만 다른 곳에서는 체크하지 않음
 ```
@@ -256,8 +256,8 @@ summaryDetails.innerHTML += `...`;
 
 ```javascript
 // 일관성 없는 공백
-var opt = document.createElement("option");
-let leftColumn = document.createElement("div");
+var opt = document.createElement('option');
+let leftColumn = document.createElement('div');
 ```
 
 ### 9.2 괄호 사용
@@ -273,8 +273,8 @@ leftColumn.appendChild(...)
 
 ```javascript
 // 따옴표 혼용
-const PRODUCT_ONE = "p1";
-let p4 = "p4";
+const PRODUCT_ONE = 'p1';
+let p4 = 'p4';
 productFive = `p5`;
 ```
 
@@ -284,7 +284,7 @@ productFive = `p5`;
 
 ```javascript
 // Header
-let header = document.createElement("div");
+let header = document.createElement('div');
 
 // 여기서도 카트 체크 (중복)
 if (cartDisp.children.length === 0) {
