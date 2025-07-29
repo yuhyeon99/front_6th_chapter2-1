@@ -221,14 +221,22 @@ function createManualElements() {
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
     </svg>
   `;
+  manualToggle.onclick = () => toggleManual();
 
   const manualOverlay = document.createElement('div');
+  manualOverlay.id = 'manual-overlay';
   manualOverlay.className = 'fixed inset-0 bg-black/50 z-40 hidden transition-opacity duration-300';
+  manualOverlay.onclick = (e) => {
+    if (e.target === manualOverlay) {
+      toggleManual(true);
+    }
+  };
 
   const manualColumn = document.createElement('div');
+  manualColumn.id = 'manual-column';
   manualColumn.className = 'fixed right-0 top-0 h-full w-80 bg-white shadow-2xl p-6 overflow-y-auto z-50 transform translate-x-full transition-transform duration-300';
   manualColumn.innerHTML = `
-    <button class="absolute top-4 right-4 text-gray-500 hover:text-black" onclick="document.querySelector('.fixed.inset-0').classList.add('hidden'); this.parentElement.classList.add('translate-x-full')">
+    <button class="absolute top-4 right-4 text-gray-500 hover:text-black" onclick="toggleManual(true)">
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
       </svg>
@@ -290,18 +298,6 @@ function createManualElements() {
 
   manualOverlay.appendChild(manualColumn);
 
-  manualToggle.onclick = () => {
-    manualOverlay.classList.toggle('hidden');
-    manualColumn.classList.toggle('translate-x-full');
-  };
-
-  manualOverlay.onclick = (e) => {
-    if (e.target === manualOverlay) {
-      manualOverlay.classList.add('hidden');
-      manualColumn.classList.add('translate-x-full');
-    }
-  };
-
   return { manualToggle, manualOverlay };
 }
 
@@ -335,7 +331,7 @@ function startTimers() {
 
 function handleAddToCart() {
   const selectedProductId = productSelectElement.value;
-  const productToAdd = productList.find(p => p.id === selectedProductId);
+  const productToAdd = findProductById(selectedProductId);
 
   if (!productToAdd || productToAdd.stock <= 0) {
     if (productToAdd && productToAdd.stock <= 0) {
@@ -374,7 +370,7 @@ function handleCartActions(event) {
 
   const productId = targetElement.dataset.productId;
   const cartItemElement = document.getElementById(productId);
-  const product = productList.find(p => p.id === productId);
+  const product = findProductById(productId);
 
   if (!product) return;
 
@@ -416,28 +412,13 @@ function updateProductSelectOptions() {
     const optionElement = document.createElement('option');
     optionElement.value = item.id;
     
-    let discountText = '';
-    if (item.onSale) discountText += ' ⚡SALE';
-    if (item.suggestSale) discountText += ' 💝추천';
-
-    if (item.stock === 0) {
-      optionElement.textContent = `${item.name} - ${item.price}원 (품절)${discountText}`;
+    const displayDetails = getProductDisplayDetails(item);
+    optionElement.textContent = displayDetails.text;
+    optionElement.className = displayDetails.className;
+    if (displayDetails.disabled) {
       optionElement.disabled = true;
-      optionElement.className = 'text-gray-400';
-    } else {
-      if (item.onSale && item.suggestSale) {
-        optionElement.textContent = `⚡💝${item.name} - ${item.originalPrice}원 → ${item.price}원 (25% SUPER SALE!)`;
-        optionElement.className = 'text-purple-600 font-bold';
-      } else if (item.onSale) {
-        optionElement.textContent = `⚡${item.name} - ${item.originalPrice}원 → ${item.price}원 (20% SALE!)`;
-        optionElement.className = 'text-red-500 font-bold';
-      } else if (item.suggestSale) {
-        optionElement.textContent = `💝${item.name} - ${item.originalPrice}원 → ${item.price}원 (5% 추천할인!)`;
-        optionElement.className = 'text-blue-500 font-bold';
-      } else {
-        optionElement.textContent = `${item.name} - ${item.price}원${discountText}`;
-      }
     }
+    
     productSelectElement.appendChild(optionElement);
   });
 
@@ -447,26 +428,15 @@ function updateProductSelectOptions() {
 function updateCartItemPrices() {
   const cartItems = Array.from(cartDisplayElement.children);
   cartItems.forEach(cartItem => {
-    const itemId = cartItem.id;
-    const product = productList.find(p => p.id === itemId);
+    const product = findProductById(cartItem.id);
 
     if (product) {
       const priceDiv = cartItem.querySelector('.text-lg');
       const nameDiv = cartItem.querySelector('h3');
       
-      if (product.onSale && product.suggestSale) {
-        priceDiv.innerHTML = `<span class="line-through text-gray-400">₩${product.originalPrice.toLocaleString()}</span> <span class="text-purple-600">₩${product.price.toLocaleString()}</span>`;
-        nameDiv.textContent = `⚡💝${product.name}`;
-      } else if (product.onSale) {
-        priceDiv.innerHTML = `<span class="line-through text-gray-400">₩${product.originalPrice.toLocaleString()}</span> <span class="text-red-500">₩${product.price.toLocaleString()}</span>`;
-        nameDiv.textContent = `⚡${product.name}`;
-      } else if (product.suggestSale) {
-        priceDiv.innerHTML = `<span class="line-through text-gray-400">₩${product.originalPrice.toLocaleString()}</span> <span class="text-blue-500">₩${product.price.toLocaleString()}</span>`;
-        nameDiv.textContent = `💝${product.name}`;
-      } else {
-        priceDiv.textContent = `₩${product.price.toLocaleString()}`;
-        nameDiv.textContent = product.name;
-      }
+      const displayDetails = getProductDisplayDetails(product);
+      priceDiv.innerHTML = displayDetails.priceHtml;
+      nameDiv.textContent = `${displayDetails.namePrefix}${product.name}`;
     }
   });
   calculateCartAndupdateUI();
@@ -477,21 +447,16 @@ function createCartItemElement(item) {
   newItemElement.id = item.id;
   newItemElement.className = 'grid grid-cols-[80px_1fr_auto] gap-5 py-5 border-b border-gray-100 first:pt-0 last:border-b-0 last:pb-0';
   
-  const saleType = item.onSale && item.suggestSale ? '⚡💝' : item.onSale ? '⚡' : item.suggestSale ? '💝' : '';
-  const priceHtml = item.onSale || item.suggestSale
-    ? `<span class="line-through text-gray-400">₩${item.originalPrice.toLocaleString()}</span> <span class="${
-        item.onSale && item.suggestSale ? 'text-purple-600' : item.onSale ? 'text-red-500' : 'text-blue-500'
-      }">₩${item.price.toLocaleString()}</span>`
-    : `₩${item.price.toLocaleString()}`;
+  const displayDetails = getProductDisplayDetails(item);
 
   newItemElement.innerHTML = `
     <div class="w-20 h-20 bg-gradient-black relative overflow-hidden">
       <div class="absolute top-1/2 left-1/2 w-[60%] h-[60%] bg-white/10 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
     </div>
     <div>
-      <h3 class="text-base font-normal mb-1 tracking-tight">${saleType}${item.name}</h3>
+      <h3 class="text-base font-normal mb-1 tracking-tight">${displayDetails.namePrefix}${item.name}</h3>
       <p class="text-xs text-gray-500 mb-0.5 tracking-wide">PRODUCT</p>
-      <p class="text-xs text-black mb-3">${priceHtml}</p>
+      <p class="text-xs text-black mb-3">${displayDetails.priceHtml}</p>
       <div class="flex items-center gap-4">
         <button class="quantity-change w-6 h-6 border border-black bg-white text-sm flex items-center justify-center transition-all hover:bg-black hover:text-white" data-product-id="${item.id}" data-change="-1">−</button>
         <span class="quantity-number text-sm font-normal min-w-[20px] text-center tabular-nums">1</span>
@@ -499,7 +464,7 @@ function createCartItemElement(item) {
       </div>
     </div>
     <div class="text-right">
-      <div class="text-lg mb-2 tracking-tight tabular-nums">${priceHtml}</div>
+      <div class="text-lg mb-2 tracking-tight tabular-nums">${displayDetails.priceHtml}</div>
       <a class="remove-item text-2xs text-gray-500 uppercase tracking-wider cursor-pointer transition-colors border-b border-transparent hover:text-black hover:border-black" data-product-id="${item.id}">Remove</a>
     </div>
   `;
@@ -521,7 +486,7 @@ function calculateCartAndupdateUI() {
   }, 0);
 
   totalAmount = cartItems.reduce((acc, cartItem) => {
-    const currentItem = productList.find(p => p.id === cartItem.id);
+    const currentItem = findProductById(cartItem.id);
     const quantity = parseInt(cartItem.querySelector('.quantity-number').textContent);
     const itemTotal = currentItem.price * quantity;
     subtotal += itemTotal;
@@ -577,7 +542,7 @@ function updateCartSummaryUI(subtotal, itemDiscounts, isTuesday) {
   if (subtotal > 0) {
     const cartItems = Array.from(cartDisplayElement.children);
     cartItems.forEach(cartItem => {
-      const currentItem = productList.find(p => p.id === cartItem.id);
+      const currentItem = findProductById(cartItem.id);
       const quantity = parseInt(cartItem.querySelector('.quantity-number').textContent);
       const itemTotal = currentItem.price * quantity;
       summaryDetails.innerHTML += `
@@ -741,6 +706,60 @@ const renderBonusPoints = () => {
 // =================================================================================================
 // 유틸리티 함수
 // =================================================================================================
+
+function findProductById(id) {
+  return productList.find(p => p.id === id);
+}
+
+function getProductDisplayDetails(item) {
+  const details = {
+    text: `${item.name} - ${item.price}원`,
+    className: '',
+    priceHtml: `₩${item.price.toLocaleString()}`,
+    namePrefix: ''
+  };
+
+  const discountTextParts = [];
+  if (item.onSale) discountTextParts.push('⚡SALE');
+  if (item.suggestSale) discountTextParts.push('💝추천');
+  const discountText = discountTextParts.length > 0 ? ` ${discountTextParts.join(' ')}` : '';
+
+  if (item.stock === 0) {
+    details.text = `${item.name} - ${item.price}원 (품절)${discountText}`;
+    details.disabled = true;
+    details.className = 'text-gray-400';
+  } else if (item.onSale && item.suggestSale) {
+    details.text = `⚡💝${item.name} - ${item.originalPrice}원 → ${item.price}원 (25% SUPER SALE!)`;
+    details.className = 'text-purple-600 font-bold';
+    details.priceHtml = `<span class="line-through text-gray-400">₩${item.originalPrice.toLocaleString()}</span> <span class="text-purple-600">₩${item.price.toLocaleString()}</span>`;
+    details.namePrefix = '⚡💝';
+  } else if (item.onSale) {
+    details.text = `⚡${item.name} - ${item.originalPrice}원 → ${item.price}원 (20% SALE!)`;
+    details.className = 'text-red-500 font-bold';
+    details.priceHtml = `<span class="line-through text-gray-400">₩${item.originalPrice.toLocaleString()}</span> <span class="text-red-500">₩${item.price.toLocaleString()}</span>`;
+    details.namePrefix = '⚡';
+  } else if (item.suggestSale) {
+    details.text = `💝${item.name} - ${item.originalPrice}원 → ${item.price}원 (5% 추천할인!)`;
+    details.className = 'text-blue-500 font-bold';
+    details.priceHtml = `<span class="line-through text-gray-400">₩${item.originalPrice.toLocaleString()}</span> <span class="text-blue-500">₩${item.price.toLocaleString()}</span>`;
+    details.namePrefix = '💝';
+  } else {
+    details.text = `${item.name} - ${item.price}원${discountText}`;
+  }
+  return details;
+}
+
+function toggleManual(forceClose = false) {
+  const manualOverlay = document.getElementById('manual-overlay');
+  const manualColumn = document.getElementById('manual-column');
+  if (forceClose) {
+    manualOverlay.classList.add('hidden');
+    manualColumn.classList.add('translate-x-full');
+  } else {
+    manualOverlay.classList.toggle('hidden');
+    manualColumn.classList.toggle('translate-x-full');
+  }
+}
 
 function getTotalStock() {
   return productList.reduce((sum, currentProduct) => sum + currentProduct.stock, 0);
