@@ -107,7 +107,7 @@ function main() {
   // --------------------------------------------------------------------------------
 
   updateProductSelectOptions();
-  calculateCartAndupdateUI();
+  updateUI();
   setupEventListeners();
   startTimers();
 }
@@ -357,7 +357,7 @@ function handleAddToCart() {
     productToAdd.stock--;
   }
 
-  calculateCartAndupdateUI();
+  updateUI();
   lastSelectedProduct = selectedProductId;
 }
 
@@ -396,13 +396,33 @@ function handleCartActions(event) {
     cartItemElement.remove();
   }
 
-  calculateCartAndupdateUI();
+  updateUI();
   updateProductSelectOptions();
 }
 
 // =================================================================================================
 // UI 업데이트 함수
 // =================================================================================================
+
+function updateUI() {
+  const cartData = calculateCartTotals();
+  totalItemCount = cartData.totalItemCount;
+  totalAmount = cartData.totalAmount;
+
+  const tuesdaySpecialElement = document.getElementById('tuesday-special');
+  if (cartData.isTuesday && cartData.totalAmount > 0) {
+    tuesdaySpecialElement.classList.remove('hidden');
+  } else {
+    tuesdaySpecialElement.classList.add('hidden');
+  }
+
+  updateCartSummaryUI(cartData.subtotal, cartData.itemDiscounts, cartData.isTuesday);
+  updateCartTotalUI();
+  updateDiscountInfoUI(cartData.originalTotal, cartData.totalDiscountRate);
+  updateItemCountUI();
+  updateStockInfoUI();
+  renderBonusPoints();
+}
 
 function updateProductSelectOptions() {
   productSelectElement.innerHTML = '';
@@ -439,7 +459,7 @@ function updateCartItemPrices() {
       nameDiv.textContent = `${displayDetails.namePrefix}${product.name}`;
     }
   });
-  calculateCartAndupdateUI();
+  updateUI();
 }
 
 function createCartItemElement(item) {
@@ -475,17 +495,17 @@ function createCartItemElement(item) {
 // 계산 및 데이터 처리 함수
 // =================================================================================================
 
-function calculateCartAndupdateUI() {
+function calculateCartTotals() {
   const cartItems = Array.from(cartDisplayElement.children);
   let subtotal = 0;
   const itemDiscounts = [];
   
-  totalItemCount = cartItems.reduce((acc, cartItem) => {
+  const totalItemCount = cartItems.reduce((acc, cartItem) => {
     const quantity = parseInt(cartItem.querySelector('.quantity-number').textContent);
     return acc + quantity;
   }, 0);
 
-  totalAmount = cartItems.reduce((acc, cartItem) => {
+  let totalAmount = cartItems.reduce((acc, cartItem) => {
     const currentItem = findProductById(cartItem.id);
     const quantity = parseInt(cartItem.querySelector('.quantity-number').textContent);
     const itemTotal = currentItem.price * quantity;
@@ -517,22 +537,13 @@ function calculateCartAndupdateUI() {
 
   const today = new Date();
   const isTuesday = today.getDay() === 2;
-  const tuesdaySpecialElement = document.getElementById('tuesday-special');
 
   if (isTuesday && totalAmount > 0) {
     totalAmount *= (1 - DISCOUNT_RATES.TUESDAY_SPECIAL);
     totalDiscountRate = 1 - totalAmount / originalTotal;
-    tuesdaySpecialElement.classList.remove('hidden');
-  } else {
-    tuesdaySpecialElement.classList.add('hidden');
   }
 
-  updateCartSummaryUI(subtotal, itemDiscounts, isTuesday);
-  updateCartTotalUI();
-  updateDiscountInfoUI(originalTotal, totalDiscountRate);
-  updateItemCountUI();
-  updateStockInfoUI();
-  renderBonusPoints();
+  return { totalItemCount, totalAmount, subtotal, itemDiscounts, totalDiscountRate, originalTotal, isTuesday };
 }
 
 function updateCartSummaryUI(subtotal, itemDiscounts, isTuesday) {
