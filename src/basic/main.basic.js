@@ -105,25 +105,26 @@ function createShoppingCart() {
     /* ---------- DOM 생성 유틸 ---------- */
     const $ = sel => document.querySelector(sel);
 
-    function createHeader() {
-        const d = document.createElement('div');
-        d.className = 'mb-8';
-        d.innerHTML = `
+    const components = {
+        createHeader() {
+            const d = document.createElement('div');
+            d.className = 'mb-8';
+            d.innerHTML = `
     <h1 class="text-xs font-medium tracking-extra-wide uppercase mb-2">🛒 Hanghae Online Store</h1>
     <div class="text-5xl tracking-tight leading-none">Shopping Cart</div>
     <p id="item-count" class="text-sm text-gray-500 font-normal mt-3">🛍️ 0 items in cart</p>
   `;
-        return d;
-    }
-    function createLayout() {
-        const grid = document.createElement('div');
-        grid.className = 'grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden';
+            return d;
+        },
+        createLayout() {
+            const grid = document.createElement('div');
+            grid.className = 'grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden';
 
-        const left = document.createElement('div');
-        left.className = 'bg-white border border-gray-200 p-8 overflow-y-auto';
-        const right = document.createElement('div');
-        right.className = 'bg-black text-white p-8 flex flex-col';
-        right.innerHTML = `
+            const left = document.createElement('div');
+            left.className = 'bg-white border border-gray-200 p-8 overflow-y-auto';
+            const right = document.createElement('div');
+            right.className = 'bg-black text-white p-8 flex flex-col';
+            right.innerHTML = `
     <h2 class="text-xs font-medium mb-5 tracking-extra-wide uppercase">Order Summary</h2>
     <div class="flex-1 flex flex-col">
       <div id="summary-details" class="space-y-3"></div>
@@ -147,28 +148,64 @@ function createShoppingCart() {
     <button class="w-full py-4 bg-white text-black text-sm font-normal uppercase tracking-super-wide cursor-pointer mt-6">Proceed to Checkout</button>
     <p class="mt-4 text-2xs text-white/60 text-center leading-relaxed">Free shipping on all orders.<br><span id="points-notice">Earn loyalty points with purchase.</span></p>
   `;
-        return { grid, left, right };
-    }
-    function createSelector() {
-        const wrap = document.createElement('div');
-        wrap.className = 'mb-6 pb-6 border-b border-gray-200';
+            return { grid, left, right };
+        },
+        createSelector() {
+            const wrap = document.createElement('div');
+            wrap.className = 'mb-6 pb-6 border-b border-gray-200';
 
-        const sel = document.createElement('select');
-        sel.id = 'product-select';
-        sel.className = 'w-full p-3 border border-gray-300 rounded-lg text-base mb-3';
+            const sel = document.createElement('select');
+            sel.id = 'product-select';
+            sel.className = 'w-full p-3 border border-gray-300 rounded-lg text-base mb-3';
 
-        const btn = document.createElement('button');
-        btn.id = 'add-to-cart';
-        btn.className = 'w-full py-3 bg-black text-white text-sm font-medium uppercase tracking-wider hover:bg-gray-800';
-        btn.textContent = 'Add to Cart';
+            const btn = document.createElement('button');
+            btn.id = 'add-to-cart';
+            btn.className = 'w-full py-3 bg-black text-white text-sm font-medium uppercase tracking-wider hover:bg-gray-800';
+            btn.textContent = 'Add to Cart';
 
-        const stockDiv = document.createElement('div');
-        stockDiv.id = 'stock-status';
-        stockDiv.className = 'text-xs text-red-500 mt-3 whitespace-pre-line';
+            const stockDiv = document.createElement('div');
+            stockDiv.id = 'stock-status';
+            stockDiv.className = 'text-xs text-red-500 mt-3 whitespace-pre-line';
 
-        wrap.append(sel, btn, stockDiv);
-        return { wrap, sel, btn, stockDiv };
-    }
+            wrap.append(sel, btn, stockDiv);
+            return { wrap, sel, btn, stockDiv };
+        },
+        cartItemTemplate(item) {
+            const p = state.productList.find(x => x.id === item.id);
+            const d = document.createElement('div');
+            d.id = item.id;
+            d.className = 'grid grid-cols-[80px_1fr_auto] gap-5 py-5 border-b border-gray-100 first:pt-0 last:border-b-0 last:pb-0';
+            d.innerHTML = `
+    <div class="w-20 h-20 bg-gradient-black relative overflow-hidden">
+      <div class="absolute top-1/2 left-1/2 w-[60%] h-[60%] bg-white/10 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
+    </div>
+    <div>
+      <h3 class="text-base font-normal mb-1 tracking-tight">${p.name}</h3>
+      <p class="text-xs text-gray-500 mb-0.5 tracking-wide">PRODUCT</p>
+      <p class="text-xs text-black mb-3">₩${p.price.toLocaleString()}</p>
+      <div class="flex items-center gap-4">
+        <button class="quantity-change w-6 h-6 border border-black bg-white text-sm" data-id="${p.id}" data-change="-1">−</button>
+        <span class="quantity-number text-sm min-w-[20px] text-center">${item.qty}</span>
+        <button class="quantity-change w-6 h-6 border border-black bg-white text-sm" data-id="${p.id}" data-change="1">+</button>
+      </div>
+    </div>
+    <div class="text-right">
+      <div class="text-lg mb-2">₩${(p.price * item.qty).toLocaleString()}</div>
+      <a class="remove-item text-2xs text-gray-500 uppercase" data-id="${p.id}">Remove</a>
+    </div>`;
+            return d;
+        },
+        createHelpModal() {
+            const helpBtn = document.createElement('button');
+            helpBtn.className = 'fixed top-4 right-4'; helpBtn.textContent = '?';
+            const modal = document.createElement('div'); modal.className = 'fixed inset-0 hidden';
+            const slide = document.createElement('div'); slide.className = 'fixed right-0 top-0 translate-x-full';
+            modal.appendChild(slide);
+            helpBtn.onclick = () => { modal.classList.toggle('hidden'); slide.classList.toggle('translate-x-full'); };
+            modal.onclick = e => { if (e.target === modal) { modal.classList.add('hidden'); slide.classList.add('translate-x-full'); } };
+            return { helpBtn, modal };
+        }
+    };
 
     /* ---------- 제품 옵션 렌더 ---------- */
     function renderProductOptions() {
@@ -238,7 +275,7 @@ function createShoppingCart() {
             alive.add(ci.id);
             let row = cartWrap.querySelector(`#${ci.id}`);
             if (!row) {
-                row = cartItemTemplate(ci);
+                row = components.cartItemTemplate(ci);
                 cartWrap.appendChild(row);
             }
             row.querySelector('.quantity-number').textContent = ci.qty;
@@ -342,12 +379,12 @@ function createShoppingCart() {
     function init() {
         const root = document.getElementById('app');
         root.innerHTML = '';
-        root.appendChild(createHeader());
+        root.appendChild(components.createHeader());
 
-        const { grid, left, right } = createLayout();
+        const { grid, left, right } = components.createLayout();
         root.appendChild(grid); grid.append(left, right);
 
-        const { wrap, sel, btn, stockDiv } = createSelector();
+        const { wrap, sel, btn, stockDiv } = components.createSelector();
         left.appendChild(wrap);
 
         const cartDiv = document.createElement('div');
@@ -357,14 +394,8 @@ function createShoppingCart() {
         btn.addEventListener('click', onAdd);
         cartDiv.addEventListener('click', onCartClick);
 
-        const helpBtn = document.createElement('button');
-        helpBtn.className = 'fixed top-4 right-4'; helpBtn.textContent = '?';
-        const modal = document.createElement('div'); modal.className = 'fixed inset-0 hidden';
-        const slide = document.createElement('div'); slide.className = 'fixed right-0 top-0 translate-x-full';
-        modal.appendChild(slide);
+        const { helpBtn, modal } = components.createHelpModal();
         root.append(helpBtn, modal);
-        helpBtn.onclick = () => { modal.classList.toggle('hidden'); slide.classList.toggle('translate-x-full'); };
-        modal.onclick = e => { if (e.target === modal) { modal.classList.add('hidden'); slide.classList.add('translate-x-full'); } };
 
         render();
     }
