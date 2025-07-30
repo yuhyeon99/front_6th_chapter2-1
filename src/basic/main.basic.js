@@ -1,49 +1,11 @@
+import { state } from './state.js';
+import * as constants from './constants.js';
+
 function createShoppingCart() {
-    /* ---------- 상수 ---------- */
-    const PRODUCT_ID_KEYBOARD = 'p1';
-    const PRODUCT_ID_MOUSE = 'p2';
-    const PRODUCT_ID_MONITOR_ARM = 'p3';
-    const PRODUCT_ID_POUCH = 'p4';
-    const PRODUCT_ID_SPEAKER = 'p5';
-
-    const DISCOUNT_THRESHOLDS = { BULK: 30, ITEM: 10 };
-    const DISCOUNT_RATES = {
-        BULK: .25, TUESDAY: .10,
-        [PRODUCT_ID_KEYBOARD]: .10,
-        [PRODUCT_ID_MOUSE]: .15,
-        [PRODUCT_ID_MONITOR_ARM]: .20,
-        [PRODUCT_ID_SPEAKER]: .25,
-    };
-    const BONUS = {
-        TUES_DAY_X2: 2,
-        SET_KM: 50,
-        SET_FULL: 100,
-        QTY10: 20, QTY20: 50, QTY30: 100,
-    };
-    const STOCK_ALERT = 5, LOW_STOCK_BORDER = 50;
-    const ERROR_MESSAGES = {
-        OUT_OF_STOCK: '재고가 부족합니다.',
-        INVALID_QUANTITY: '유효하지 않은 수량입니다.',
-    };
-
-    /* ---------- 상태 ---------- */
-    const state = {
-        productList: [
-            { id: PRODUCT_ID_KEYBOARD, name: '버그 없애는 키보드', price: 10000, stock: 50, originalPrice: 10000, onSale: false, suggest: false },
-            { id: PRODUCT_ID_MOUSE, name: '생산성 폭발 마우스', price: 20000, stock: 30, originalPrice: 20000, onSale: false, suggest: false },
-            { id: PRODUCT_ID_MONITOR_ARM, name: '거북목 탈출 모니터암', price: 30000, stock: 20, originalPrice: 30000, onSale: false, suggest: false },
-            { id: PRODUCT_ID_POUCH, name: '에러 방지 노트북 파우치', price: 15000, stock: 0, originalPrice: 15000, onSale: false, suggest: false },
-            { id: PRODUCT_ID_SPEAKER, name: '코딩할 때 듣는 Lo-Fi 스피커', price: 25000, stock: 10, originalPrice: 25000, onSale: false, suggest: false },
-        ],
-        cartItems: [],
-        lastSelectedProduct: null,
-        totals: { itemCnt: 0, amount: 0, discountRate: 0 },
-        bonus: { point: 0, details: [] },
-    };
 
     /* ---------- 순수 계산 함수 ---------- */
     function calcItemDiscount(pid, qty) {
-        return qty >= DISCOUNT_THRESHOLDS.ITEM ? (DISCOUNT_RATES[pid] || 0) : 0;
+        return qty >= constants.DISCOUNT_THRESHOLDS.ITEM ? (constants.DISCOUNT_RATES[pid] || 0) : 0;
     }
 
     function calcCartTotals(st, date = new Date()) {
@@ -66,14 +28,14 @@ function createShoppingCart() {
         });
 
         let discountRate = subtotal > 0 ? (subtotal - amount) / subtotal : 0;
-        if (itemCnt >= DISCOUNT_THRESHOLDS.BULK) {
-            amount = subtotal * (1 - DISCOUNT_RATES.BULK);
-            discountRate = DISCOUNT_RATES.BULK;
+        if (itemCnt >= constants.DISCOUNT_THRESHOLDS.BULK) {
+            amount = subtotal * (1 - constants.DISCOUNT_RATES.BULK);
+            discountRate = constants.DISCOUNT_RATES.BULK;
         }
 
         const isTue = date.getDay() === 2;
         if (isTue && amount > 0) {
-            amount *= (1 - DISCOUNT_RATES.TUESDAY);
+            amount *= (1 - constants.DISCOUNT_RATES.TUESDAY);
             discountRate = 1 - amount / subtotal;
         }
 
@@ -87,17 +49,17 @@ function createShoppingCart() {
         const det = [];
 
         if (base > 0) det.push(`기본: ${base}p`);
-        if (date.getDay() === 2 && base > 0) { pt *= BONUS.TUES_DAY_X2; det.push('화요일 2배'); }
+        if (date.getDay() === 2 && base > 0) { pt *= constants.BONUS.TUES_DAY_X2; det.push('화요일 2배'); }
 
         const ids = st.cartItems.map(c => c.id);
-        const hasK = ids.includes(PRODUCT_ID_KEYBOARD), hasM = ids.includes(PRODUCT_ID_MOUSE), hasA = ids.includes(PRODUCT_ID_MONITOR_ARM);
-        if (hasK && hasM) { pt += BONUS.SET_KM; det.push('키보드+마우스 세트 +50p'); }
-        if (hasK && hasM && hasA) { pt += BONUS.SET_FULL; det.push('풀세트 구매 +100p'); }
+        const hasK = ids.includes(constants.PRODUCT_ID_KEYBOARD), hasM = ids.includes(constants.PRODUCT_ID_MOUSE), hasA = ids.includes(constants.PRODUCT_ID_MONITOR_ARM);
+        if (hasK && hasM) { pt += constants.BONUS.SET_KM; det.push('키보드+마우스 세트 +50p'); }
+        if (hasK && hasM && hasA) { pt += constants.BONUS.SET_FULL; det.push('풀세트 구매 +100p'); }
 
         const qty = st.totals.itemCnt;
-        if (qty >= 30) { pt += BONUS.QTY30; det.push('대량구매(30개+) +100p'); }
-        else if (qty >= 20) { pt += BONUS.QTY20; det.push('대량구매(20개+) +50p'); }
-        else if (qty >= 10) { pt += BONUS.QTY10; det.push('대량구매(10개+) +20p'); }
+        if (qty >= 30) { pt += constants.BONUS.QTY30; det.push('대량구매(30개+) +100p'); }
+        else if (qty >= 20) { pt += constants.BONUS.QTY20; det.push('대량구매(20개+) +50p'); }
+        else if (qty >= 10) { pt += constants.BONUS.QTY10; det.push('대량구매(10개+) +20p'); }
 
         return { point: pt, details: det };
     }
@@ -231,7 +193,7 @@ function createShoppingCart() {
             if (firstEnabled) sel.value = firstEnabled.value;
         }
 
-        sel.style.borderColor = totalStock < LOW_STOCK_BORDER ? 'orange' : '';
+        sel.style.borderColor = totalStock < constants.LOW_STOCK_BORDER ? 'orange' : '';
     }
 
     /* ---------- Cart DOM 한 개 ---------- */
@@ -258,8 +220,8 @@ function createShoppingCart() {
       <div class="text-lg mb-2">₩${(p.price * item.qty).toLocaleString()}</div>
       <a class="remove-item text-2xs text-gray-500 uppercase" data-id="${p.id}">Remove</a>
     </div>`;
-        return d;
-    }
+            return d;
+        }
 
     /* ---------- 렌더 루트 ---------- */
     function render() {
@@ -317,7 +279,7 @@ function createShoppingCart() {
         state.productList.forEach(p => {
             if (p.stock === 0) {
                 stockMsg += `${p.name}: 품절\n`;
-            } else if (p.stock < STOCK_ALERT) {
+            } else if (p.stock < constants.STOCK_ALERT) {
                 stockMsg += `${p.name}: 재고 부족 (${p.stock}개 남음)\n`;
             }
         });
@@ -328,7 +290,7 @@ function createShoppingCart() {
     function onAdd() {
         const pid = $('#product-select').value;
         const prod = state.productList.find(p => p.id === pid);
-        if (!prod || prod.stock <= 0) { alert(ERROR_MESSAGES.OUT_OF_STOCK); return; }
+        if (!prod || prod.stock <= 0) { alert(constants.ERROR_MESSAGES.OUT_OF_STOCK); return; }
 
         const existing = state.cartItems.find(c => c.id === pid);
         if (existing) { existing.qty++; }
@@ -351,13 +313,13 @@ function createShoppingCart() {
         if (btn.classList.contains('quantity-change')) {
             const delta = parseInt(btn.dataset.change, 10);
             if (isNaN(delta)) {
-                alert(ERROR_MESSAGES.INVALID_QUANTITY);
+                alert(constants.ERROR_MESSAGES.INVALID_QUANTITY);
                 return;
             }
             const newQty = ci.qty + delta;
 
             if (delta > 0 && prod.stock < 1) {
-                alert(ERROR_MESSAGES.OUT_OF_STOCK);
+                alert(constants.ERROR_MESSAGES.OUT_OF_STOCK);
                 return;
             }
 
