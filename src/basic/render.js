@@ -1,6 +1,6 @@
 import { STOCK_ALERT, LOW_STOCK_BORDER } from './product/constants.js';
 import { calcCartTotals, calcBonusPoints } from './calculation.js';
-import { $ } from './utils.js';
+import { $ } from './utils/utils.js';
 import { CartItem } from './components/CartItem.js';
 
 function renderProductOptions(state) {

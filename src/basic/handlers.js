@@ -1,6 +1,6 @@
 import { ERROR_MESSAGES } from './utils/errorMessages.js';
 import { render } from './render.js';
-import { $ } from './utils.js';
+import { $ } from './utils/utils.js';
 
 export function onAdd(state) {
     const pid = $('#product-select').value;
