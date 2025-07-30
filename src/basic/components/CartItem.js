@@ -1,6 +1,4 @@
-import { state } from '../state.js';
-
-export function CartItem(item) {
+export function CartItem(item, state) {
     const p = state.productList.find(x => x.id === item.id);
     const d = document.createElement('div');
     d.id = item.id;

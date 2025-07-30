@@ -1,7 +1,9 @@
-import * as constants from './constants.js';
+import { DISCOUNT_THRESHOLDS, DISCOUNT_RATES } from './cart/constants.js';
+import { PRODUCT_ID_KEYBOARD, PRODUCT_ID_MOUSE, PRODUCT_ID_MONITOR_ARM } from './product/constants.js';
+import { BONUS } from './point/constants.js';
 
 function calcItemDiscount(pid, qty) {
-    return qty >= constants.DISCOUNT_THRESHOLDS.ITEM ? (constants.DISCOUNT_RATES[pid] || 0) : 0;
+    return qty >= DISCOUNT_THRESHOLDS.ITEM ? (DISCOUNT_RATES[pid] || 0) : 0;
 }
 
 export function calcCartTotals(st, date = new Date()) {
@@ -24,14 +26,14 @@ export function calcCartTotals(st, date = new Date()) {
     });
 
     let discountRate = subtotal > 0 ? (subtotal - amount) / subtotal : 0;
-    if (itemCnt >= constants.DISCOUNT_THRESHOLDS.BULK) {
-        amount = subtotal * (1 - constants.DISCOUNT_RATES.BULK);
-        discountRate = constants.DISCOUNT_RATES.BULK;
+    if (itemCnt >= DISCOUNT_THRESHOLDS.BULK) {
+        amount = subtotal * (1 - DISCOUNT_RATES.BULK);
+        discountRate = DISCOUNT_RATES.BULK;
     }
 
     const isTue = date.getDay() === 2;
     if (isTue && amount > 0) {
-        amount *= (1 - constants.DISCOUNT_RATES.TUESDAY);
+        amount *= (1 - DISCOUNT_RATES.TUESDAY);
         discountRate = 1 - amount / subtotal;
     }
 
@@ -45,17 +47,17 @@ export function calcBonusPoints(st, date = new Date()) {
     const det = [];
 
     if (base > 0) det.push(`기본: ${base}p`);
-    if (date.getDay() === 2 && base > 0) { pt *= constants.BONUS.TUES_DAY_X2; det.push('화요일 2배'); }
+    if (date.getDay() === 2 && base > 0) { pt *= BONUS.TUES_DAY_X2; det.push('화요일 2배'); }
 
     const ids = st.cartItems.map(c => c.id);
-    const hasK = ids.includes(constants.PRODUCT_ID_KEYBOARD), hasM = ids.includes(constants.PRODUCT_ID_MOUSE), hasA = ids.includes(constants.PRODUCT_ID_MONITOR_ARM);
-    if (hasK && hasM) { pt += constants.BONUS.SET_KM; det.push('키보드+마우스 세트 +50p'); }
-    if (hasK && hasM && hasA) { pt += constants.BONUS.SET_FULL; det.push('풀세트 구매 +100p'); }
+    const hasK = ids.includes(PRODUCT_ID_KEYBOARD), hasM = ids.includes(PRODUCT_ID_MOUSE), hasA = ids.includes(PRODUCT_ID_MONITOR_ARM);
+    if (hasK && hasM) { pt += BONUS.SET_KM; det.push('키보드+마우스 세트 +50p'); }
+    if (hasK && hasM && hasA) { pt += BONUS.SET_FULL; det.push('풀세트 구매 +100p'); }
 
     const qty = st.totals.itemCnt;
-    if (qty >= 30) { pt += constants.BONUS.QTY30; det.push('대량구매(30개+) +100p'); }
-    else if (qty >= 20) { pt += constants.BONUS.QTY20; det.push('대량구매(20개+) +50p'); }
-    else if (qty >= 10) { pt += constants.BONUS.QTY10; det.push('대량구매(10개+) +20p'); }
+    if (qty >= 30) { pt += BONUS.QTY30; det.push('대량구매(30개+) +100p'); }
+    else if (qty >= 20) { pt += BONUS.QTY20; det.push('대량구매(20개+) +50p'); }
+    else if (qty >= 10) { pt += BONUS.QTY10; det.push('대량구매(10개+) +20p'); }
 
     return { point: pt, details: det };
 }

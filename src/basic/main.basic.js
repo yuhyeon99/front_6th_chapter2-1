@@ -1,6 +1,6 @@
-import { state } from './state.js';
-import * as constants from './constants.js';
-import { $ } from './utils.js';
+import { productList } from './product/productState.js';
+import { cartState } from './cart/cartState.js';
+import { pointState } from './point/pointState.js';
 import { onAdd, onCartClick } from './handlers.js';
 import { Header } from './components/Header.js';
 import { Layout } from './components/Layout.js';
@@ -9,6 +9,13 @@ import { HelpModal } from './components/HelpModal.js';
 import { render } from './render.js';
 
 function createShoppingCart() {
+    const state = {
+        productList: productList,
+        cartItems: cartState.cartItems,
+        lastSelectedProduct: cartState.lastSelectedProduct,
+        totals: cartState.totals,
+        bonus: pointState,
+    };
 
     /* ---------- 부트스트랩 ---------- */
     function init() {
@@ -26,16 +33,16 @@ function createShoppingCart() {
         cartDiv.id = 'cart-items';
         left.appendChild(cartDiv);
 
-        btn.addEventListener('click', onAdd);
-        cartDiv.addEventListener('click', onCartClick);
+        btn.addEventListener('click', () => onAdd(state));
+        cartDiv.addEventListener('click', (e) => onCartClick(e, state));
 
         const { helpBtn, modal } = HelpModal();
         root.append(helpBtn, modal);
 
-        render();
+        render(state);
     }
 
-    return { init };
+    return { init, state };
 }
 
 createShoppingCart().init();

@@ -1,10 +1,9 @@
-import { state } from './state.js';
-import * as constants from './constants.js';
+import { STOCK_ALERT, LOW_STOCK_BORDER } from './product/constants.js';
 import { calcCartTotals, calcBonusPoints } from './calculation.js';
 import { $ } from './utils.js';
 import { CartItem } from './components/CartItem.js';
 
-function renderProductOptions() {
+function renderProductOptions(state) {
     const sel = $('#product-select');
     const current = state.lastSelectedProduct || sel.value;
     sel.innerHTML = '';
@@ -27,14 +26,14 @@ function renderProductOptions() {
         if (firstEnabled) sel.value = firstEnabled.value;
     }
 
-    sel.style.borderColor = totalStock < constants.LOW_STOCK_BORDER ? 'orange' : '';
+    sel.style.borderColor = totalStock < LOW_STOCK_BORDER ? 'orange' : '';
 }
 
-export function render() {
+export function render(state) {
     state.totals = calcCartTotals(state, new Date());
     state.bonus = calcBonusPoints(state, new Date());
 
-    renderProductOptions();
+    renderProductOptions(state);
 
     const cartWrap = $('#cart-items');
     const alive = new Set();
@@ -43,7 +42,7 @@ export function render() {
         alive.add(ci.id);
         let row = cartWrap.querySelector(`#${ci.id}`);
         if (!row) {
-            row = CartItem(ci);
+            row = CartItem(ci, state);
             cartWrap.appendChild(row);
         }
         row.querySelector('.quantity-number').textContent = ci.qty;
@@ -82,12 +81,6 @@ export function render() {
     }
 
     let stockMsg = '';
-    state.productList.forEach(p => {
-        if (p.stock === 0) {
-            stockMsg += `${p.name}: 품절\n`;
-        } else if (p.stock < constants.STOCK_ALERT) {
-            stockMsg += `${p.name}: 재고 부족 (${p.stock}개 남음)\n`;
-        }
-    });
+    state.productList.forEach(p => {        if (p.stock === 0) {            stockMsg += `${p.name}: 품절\n`;        } else if (p.stock < STOCK_ALERT) {            stockMsg += `${p.name}: 재고 부족 (${p.stock}개 남음)\n`;        }    });
     $('#stock-status').textContent = stockMsg;
 }
