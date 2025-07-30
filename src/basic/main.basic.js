@@ -1,8 +1,12 @@
 import { state } from './state.js';
 import * as constants from './constants.js';
-import { components, render } from './dom.js';
 import { $ } from './utils.js';
 import { onAdd, onCartClick } from './handlers.js';
+import { createHeader } from './components/Header.js';
+import { createLayout } from './components/Layout.js';
+import { createSelector } from './components/Selector.js';
+import { createHelpModal } from './components/HelpModal.js';
+import { render } from './render.js';
 
 function createShoppingCart() {
 
@@ -10,12 +14,12 @@ function createShoppingCart() {
     function init() {
         const root = document.getElementById('app');
         root.innerHTML = '';
-        root.appendChild(components.createHeader());
+        root.appendChild(createHeader());
 
-        const { grid, left, right } = components.createLayout();
+        const { grid, left, right } = createLayout();
         root.appendChild(grid); grid.append(left, right);
 
-        const { wrap, sel, btn, stockDiv } = components.createSelector();
+        const { wrap, sel, btn, stockDiv } = createSelector();
         left.appendChild(wrap);
 
         const cartDiv = document.createElement('div');
@@ -25,7 +29,7 @@ function createShoppingCart() {
         btn.addEventListener('click', onAdd);
         cartDiv.addEventListener('click', onCartClick);
 
-        const { helpBtn, modal } = components.createHelpModal();
+        const { helpBtn, modal } = createHelpModal();
         root.append(helpBtn, modal);
 
         render();

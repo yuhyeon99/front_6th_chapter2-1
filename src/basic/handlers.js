@@ -1,6 +1,6 @@
 import { state } from './state.js';
 import * as constants from './constants.js';
-import { render } from './dom.js';
+import { render } from './render.js';
 import { $ } from './utils.js';
 
 export function onAdd() {
