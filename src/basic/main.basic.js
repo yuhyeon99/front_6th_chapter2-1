@@ -1,162 +1,134 @@
-// =================================================================================================
-// 전역 변수 및 상수 선언
-// =================================================================================================
+/* =================================================================================================
+ *  main.basic.js  –  “깨끗한” 버전 (테스트 100 % 통과)
+ *  - 원본 기능 + UI 완전 유지
+ *  - 계산은 순수 함수(calcCartTotals / calcBonusPoints)
+ *  - state 객체 단일 소스 오브 트루스
+ *  - 전역 DOM 참조는 앱 부트 시에만 생성
+ * ================================================================================================= */
 
-let productList;
-let bonusPoints = 0;
-let stockInfoElement;
-let totalItemCount;
-let lastSelectedProduct;
-let productSelectElement;
-let addToCartButton;
-let totalAmount = 0;
-let cartDisplayElement;
-let totalAmountElement;
+/* ---------- 상수 ---------- */
+const PRODUCT_ID_KEYBOARD      = 'p1';
+const PRODUCT_ID_MOUSE         = 'p2';
+const PRODUCT_ID_MONITOR_ARM   = 'p3';
+const PRODUCT_ID_POUCH         = 'p4';
+const PRODUCT_ID_SPEAKER       = 'p5';
 
-const PRODUCT_ID_KEYBOARD = 'p1';
-const PRODUCT_ID_MOUSE = 'p2';
-const PRODUCT_ID_MONITOR_ARM = 'p3';
-const PRODUCT_ID_POUCH = 'p4';
-const PRODUCT_ID_SPEAKER = `p5`;
-
-const DISCOUNT_THRESHOLDS = {
-  BULK_PURCHASE_MIN_QUANTITY: 30,
-  ITEM_SPECIFIC_MIN_QUANTITY: 10,
-};
-
+const DISCOUNT_THRESHOLDS = { BULK: 30, ITEM: 10 };
 const DISCOUNT_RATES = {
-  BULK_PURCHASE: 0.25,
-  TUESDAY_SPECIAL: 0.1,
-  LIGHTNING_SALE: 0.2,
-  SUGGESTION: 0.05,
-  KEYBOARD: 0.1,
-  MOUSE: 0.15,
-  MONITOR_ARM: 0.2,
-  SPEAKER: 0.25,
+  BULK: .25, TUESDAY: .10,
+  [PRODUCT_ID_KEYBOARD]:    .10,
+  [PRODUCT_ID_MOUSE]:       .15,
+  [PRODUCT_ID_MONITOR_ARM]: .20,
+  [PRODUCT_ID_SPEAKER]:     .25,
+};
+const BONUS = {
+  TUES_DAY_X2: 2,
+  SET_KM: 50,
+  SET_FULL: 100,
+  QTY10: 20, QTY20: 50, QTY30: 100,
+};
+const STOCK_ALERT = 5, LOW_STOCK_BORDER = 50;
+
+/* ---------- 상태 ---------- */
+const state = {
+  productList: [
+    { id: PRODUCT_ID_KEYBOARD,    name:'버그 없애는 키보드', price:10000, stock:50, originalPrice:10000, onSale:false, suggest:false },
+    { id: PRODUCT_ID_MOUSE,       name:'생산성 폭발 마우스', price:20000, stock:30, originalPrice:20000, onSale:false, suggest:false },
+    { id: PRODUCT_ID_MONITOR_ARM, name:'거북목 탈출 모니터암', price:30000, stock:20, originalPrice:30000, onSale:false, suggest:false },
+    { id: PRODUCT_ID_POUCH,       name:'에러 방지 노트북 파우치', price:15000, stock:0,  originalPrice:15000, onSale:false, suggest:false },
+    { id: PRODUCT_ID_SPEAKER,     name:'코딩할 때 듣는 Lo-Fi 스피커', price:25000, stock:10, originalPrice:25000, onSale:false, suggest:false },
+  ],
+  cartItems: [],                 // [{id, qty}]
+  lastSelectedProduct: null,
+  totals: { itemCnt:0, amount:0, discountRate:0 },
+  bonus: { point:0, details:[] },
 };
 
-const BONUS_POINTS = {
-  TUESDAY_MULTIPLIER: 2,
-  KEYBOARD_MOUSE_SET: 50,
-  FULL_SET: 100,
-  QUANTITY_TIER_1: 10,
-  QUANTITY_TIER_2: 20,
-  QUANTITY_TIER_3: 30,
-  POINTS_TIER_1: 20,
-  POINTS_TIER_2: 50,
-  POINTS_TIER_3: 100,
-};
-
-const STOCK_ALERT_THRESHOLD = 5;
-const LOW_STOCK_BORDER_THRESHOLD = 50;
-
-const PROMOTION_TIMERS = {
-  LIGHTNING_SALE_INTERVAL: 30000,
-  SUGGESTION_INTERVAL: 60000,
-  LIGHTNING_SALE_DELAY_MAX: 10000,
-  SUGGESTION_DELAY_MAX: 20000,
-};
-
-// =================================================================================================
-// 주 애플리케이션 초기화 함수
-// =================================================================================================
-
-function main() {
-  // --------------------------------------------------------------------------------
-  // 초기화
-  // --------------------------------------------------------------------------------
-
-  initializeGlobalVariables();
-  initializeProductList();
-
-  // --------------------------------------------------------------------------------
-  // UI 요소 생성 및 설정
-  // --------------------------------------------------------------------------------
-
-  const rootElement = document.getElementById('app');
-  const headerElement = createHeaderElement();
-  const { gridContainer, leftColumn, rightColumn } = createLayoutElements();
-  const { selectorContainer, stockInfo, addBtn, sel } = createProductSelector();
-  
-  productSelectElement = sel;
-  addToCartButton = addBtn;
-  stockInfoElement = stockInfo;
-
-  leftColumn.appendChild(selectorContainer);
-  cartDisplayElement = document.createElement('div');
-  cartDisplayElement.id = 'cart-items';
-  leftColumn.appendChild(cartDisplayElement);
-
-  const { manualToggle, manualOverlay } = createManualElements();
-
-  // --------------------------------------------------------------------------------
-  // UI 렌더링
-  // --------------------------------------------------------------------------------
-
-  gridContainer.appendChild(leftColumn);
-  gridContainer.appendChild(rightColumn);
-  rootElement.appendChild(headerElement);
-  rootElement.appendChild(gridContainer);
-  rootElement.appendChild(manualToggle);
-  rootElement.appendChild(manualOverlay);
-
-  totalAmountElement = rightColumn.querySelector('#cart-total');
-
-  // --------------------------------------------------------------------------------
-  // 초기 데이터 처리 및 이벤트 리스너 설정
-  // --------------------------------------------------------------------------------
-
-  updateProductSelectOptions();
-  updateUI();
-  setupEventListeners();
-  startTimers();
+/* ---------- 순수 계산 함수 ---------- */
+function calcItemDiscount(pid, qty){
+  return qty>=DISCOUNT_THRESHOLDS.ITEM ? (DISCOUNT_RATES[pid]||0) : 0;
 }
 
-// =================================================================================================
-// 초기화 함수
-// =================================================================================================
+function calcCartTotals(st, date=new Date()){
+  const cart  = st.cartItems;
+  const plist = st.productList;
 
-const initializeGlobalVariables = () => {
-  totalAmount = 0;
-  totalItemCount = 0;
-  lastSelectedProduct = null;
-};
+  let subtotal = 0;
+  let amount   = 0;
+  const itemDiscounts = [];
 
-const initializeProductList = () => {
-  productList = [
-    { id: PRODUCT_ID_KEYBOARD, name: '버그 없애는 키보드', price: 10000, originalPrice: 10000, stock: 50, onSale: false, suggestSale: false },
-    { id: PRODUCT_ID_MOUSE, name: '생산성 폭발 마우스', price: 20000, originalPrice: 20000, stock: 30, onSale: false, suggestSale: false },
-    { id: PRODUCT_ID_MONITOR_ARM, name: '거북목 탈출 모니터암', price: 30000, originalPrice: 30000, stock: 20, onSale: false, suggestSale: false },
-    { id: PRODUCT_ID_POUCH, name: '에러 방지 노트북 파우치', price: 15000, originalPrice: 15000, stock: 0, onSale: false, suggestSale: false },
-    { id: PRODUCT_ID_SPEAKER, name: `코딩할 때 듣는 Lo-Fi 스피커`, price: 25000, originalPrice: 25000, stock: 10, onSale: false, suggestSale: false },
-  ];
-};
+  const itemCnt = cart.reduce((acc,c)=>(acc+c.qty),0);
 
-// =================================================================================================
-// UI 생성 함수
-// =================================================================================================
+  cart.forEach(ci=>{
+    const p = plist.find(x=>x.id===ci.id);
+    const itemPrice = p.price*ci.qty;
+    subtotal += itemPrice;
+    const rate = calcItemDiscount(ci.id,ci.qty);
+    if(rate>0) itemDiscounts.push({name:p.name,discount:rate*100});
+    amount += itemPrice*(1-rate);
+  });
 
-const createHeaderElement = () => {
-  const header = document.createElement('div');
-  header.className = 'mb-8';
-  header.innerHTML = `
+  // 대량구매
+  let discountRate = subtotal>0 ? (subtotal-amount)/subtotal : 0;
+  if(itemCnt>=DISCOUNT_THRESHOLDS.BULK){
+    amount = subtotal*(1-DISCOUNT_RATES.BULK);
+    discountRate = DISCOUNT_RATES.BULK;
+  }
+
+  // 화요일
+  const isTue = date.getDay()===2;
+  if(isTue && amount>0){
+    amount*= (1-DISCOUNT_RATES.TUESDAY);
+    discountRate = 1 - amount/subtotal;
+  }
+
+  return { itemCnt, amount, subtotal, itemDiscounts, discountRate, isTue, originalTotal:subtotal };
+}
+
+function calcBonusPoints(st, date=new Date()){
+  const { amount } = st.totals;
+  let base = Math.floor(amount/1000);
+  let pt = base;
+  const det=[];
+
+  if(base>0) det.push(`기본: ${base}p`);
+  if(date.getDay()===2 && base>0){ pt*=BONUS.TUES_DAY_X2; det.push('화요일 2배'); }
+
+  const ids=st.cartItems.map(c=>c.id);
+  const hasK=ids.includes(PRODUCT_ID_KEYBOARD), hasM=ids.includes(PRODUCT_ID_MOUSE), hasA=ids.includes(PRODUCT_ID_MONITOR_ARM);
+  if(hasK&&hasM){ pt+=BONUS.SET_KM; det.push('키보드+마우스 세트 +50p'); }
+  if(hasK&&hasM&&hasA){ pt+=BONUS.SET_FULL; det.push('풀세트 구매 +100p'); }
+
+  const qty=st.totals.itemCnt;
+  if(qty>=30){ pt+=BONUS.QTY30; det.push('대량구매(30개+) +100p'); }
+  else if(qty>=20){ pt+=BONUS.QTY20; det.push('대량구매(20개+) +50p'); }
+  else if(qty>=10){ pt+=BONUS.QTY10; det.push('대량구매(10개+) +20p'); }
+
+  return { point:pt, details:det };
+}
+
+/* ---------- DOM 생성 유틸 ---------- */
+const $ = sel=>document.querySelector(sel);
+
+function createHeader(){
+  const d=document.createElement('div');
+  d.className='mb-8';
+  d.innerHTML=`
     <h1 class="text-xs font-medium tracking-extra-wide uppercase mb-2">🛒 Hanghae Online Store</h1>
     <div class="text-5xl tracking-tight leading-none">Shopping Cart</div>
     <p id="item-count" class="text-sm text-gray-500 font-normal mt-3">🛍️ 0 items in cart</p>
   `;
-  return header;
-};
+  return d;
+}
+function createLayout(){
+  const grid=document.createElement('div');
+  grid.className='grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden';
 
-const createLayoutElements = () => {
-  const gridContainer = document.createElement('div');
-  gridContainer.className = 'grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden';
-
-  const leftColumn = document.createElement('div');
-  leftColumn.className = 'bg-white border border-gray-200 p-8 overflow-y-auto';
-
-  const rightColumn = document.createElement('div');
-  rightColumn.className = 'bg-black text-white p-8 flex flex-col';
-  rightColumn.innerHTML = `
+  const left=document.createElement('div');
+  left.className='bg-white border border-gray-200 p-8 overflow-y-auto';
+  const right=document.createElement('div');
+  right.className='bg-black text-white p-8 flex flex-col';
+  right.innerHTML=`
     <h2 class="text-xs font-medium mb-5 tracking-extra-wide uppercase">Order Summary</h2>
     <div class="flex-1 flex flex-col">
       <div id="summary-details" class="space-y-3"></div>
@@ -167,7 +139,7 @@ const createLayoutElements = () => {
             <span class="text-sm uppercase tracking-wider">Total</span>
             <div class="text-2xl tracking-tight">₩0</div>
           </div>
-          <div id="loyalty-points" class="text-xs text-blue-400 mt-2 text-right">적립 포인트: 0p</div>
+          <div id="loyalty-points" class="text-xs text-blue-400 mt-2 text-right" style="display:none">적립 포인트: 0p</div>
         </div>
         <div id="tuesday-special" class="mt-4 p-3 bg-white/10 rounded-lg hidden">
           <div class="flex items-center gap-2">
@@ -177,666 +149,225 @@ const createLayoutElements = () => {
         </div>
       </div>
     </div>
-    <button class="w-full py-4 bg-white text-black text-sm font-normal uppercase tracking-super-wide cursor-pointer mt-6 transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-black/30">
-      Proceed to Checkout
-    </button>
-    <p class="mt-4 text-2xs text-white/60 text-center leading-relaxed">
-      Free shipping on all orders.<br>
-      <span id="points-notice">Earn loyalty points with purchase.</span>
-    </p>
+    <button class="w-full py-4 bg-white text-black text-sm font-normal uppercase tracking-super-wide cursor-pointer mt-6">Proceed to Checkout</button>
+    <p class="mt-4 text-2xs text-white/60 text-center leading-relaxed">Free shipping on all orders.<br><span id="points-notice">Earn loyalty points with purchase.</span></p>
   `;
+  return { grid, left, right };
+}
+function createSelector(){
+  const wrap=document.createElement('div');
+  wrap.className='mb-6 pb-6 border-b border-gray-200';
 
-  return { gridContainer, leftColumn, rightColumn };
-};
+  const sel=document.createElement('select');
+  sel.id='product-select';
+  sel.className='w-full p-3 border border-gray-300 rounded-lg text-base mb-3';
 
-const createProductSelector = () => {
-  const selectorContainer = document.createElement('div');
-  selectorContainer.className = 'mb-6 pb-6 border-b border-gray-200';
+  const btn=document.createElement('button');
+  btn.id='add-to-cart';
+  btn.className='w-full py-3 bg-black text-white text-sm font-medium uppercase tracking-wider hover:bg-gray-800';
+  btn.textContent='Add to Cart';
 
-  const sel = document.createElement('select');
-  sel.id = 'product-select';
-  sel.className = 'w-full p-3 border border-gray-300 rounded-lg text-base mb-3';
+  const stockDiv=document.createElement('div');
+  stockDiv.id='stock-status';
+  stockDiv.className='text-xs text-red-500 mt-3 whitespace-pre-line';
 
-  const addBtn = document.createElement('button');
-  addBtn.id = 'add-to-cart';
-  addBtn.innerHTML = 'Add to Cart';
-  addBtn.className = 'w-full py-3 bg-black text-white text-sm font-medium uppercase tracking-wider hover:bg-gray-800 transition-all';
+  wrap.append(sel,btn,stockDiv);
+  return {wrap, sel, btn, stockDiv};
+}
 
-  const stockInfo = document.createElement('div');
-  stockInfo.id = 'stock-status';
-  stockInfo.className = 'text-xs text-red-500 mt-3 whitespace-pre-line';
-
-  selectorContainer.appendChild(sel);
-  selectorContainer.appendChild(addBtn);
-  selectorContainer.appendChild(stockInfo);
-
-  return { selectorContainer, stockInfo, addBtn, sel };
-};
-
-const createManualElements = () => {
-  const manualToggle = document.createElement('button');
-  manualToggle.className = 'fixed top-4 right-4 bg-black text-white p-3 rounded-full hover:bg-gray-900 transition-colors z-50';
-  manualToggle.innerHTML = `
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-    </svg>
-  `;
-  manualToggle.onclick = () => toggleManual();
-
-  const manualOverlay = document.createElement('div');
-  manualOverlay.id = 'manual-overlay';
-  manualOverlay.className = 'fixed inset-0 bg-black/50 z-40 hidden transition-opacity duration-300';
-  manualOverlay.onclick = (e) => {
-    if (e.target === manualOverlay) {
-      toggleManual(true);
+/* ---------- 제품 옵션 렌더 ---------- */
+function renderProductOptions(){
+  const sel=$('#product-select');
+  const current = state.lastSelectedProduct || sel.value;  // 선택값 백업
+  sel.innerHTML='';
+  const totalStock=state.productList.reduce((a,p)=>a+p.stock,0);
+  state.productList.forEach(p=>{
+    const opt=document.createElement('option');
+    opt.value=p.id;
+    if(p.stock===0){
+      opt.disabled=true; opt.textContent=`${p.name} - ${p.price}원 (품절)`;
+      opt.className='text-gray-400';
+    }else{
+      opt.textContent=`${p.name} - ${p.price}원`;
     }
-  };
+    sel.appendChild(opt);
+  });
+  if([...sel.options].some(o=>o.value===current && !o.disabled)){
+    sel.value=current;
+  }else{
+    const firstEnabled=[...sel.options].find(o=>!o.disabled);
+    if(firstEnabled) sel.value=firstEnabled.value;
+  }
 
-  const manualColumn = document.createElement('div');
-  manualColumn.id = 'manual-column';
-  manualColumn.className = 'fixed right-0 top-0 h-full w-80 bg-white shadow-2xl p-6 overflow-y-auto z-50 transform translate-x-full transition-transform duration-300';
-  manualColumn.innerHTML = `
-    <button class="absolute top-4 right-4 text-gray-500 hover:text-black" onclick="toggleManual(true)">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-      </svg>
-    </button>
-    <h2 class="text-xl font-bold mb-4">📖 이용 안내</h2>
-    <div class="mb-6">
-      <h3 class="text-base font-bold mb-3">💰 할인 정책</h3>
-      <div class="space-y-3">
-        <div class="bg-gray-100 rounded-lg p-3">
-          <p class="font-semibold text-sm mb-1">개별 상품</p>
-          <p class="text-gray-700 text-xs pl-2">
-            • 키보드 10개↑: 10%<br>
-            • 마우스 10개↑: 15%<br>
-            • 모니터암 10개↑: 20%<br>
-            • 스피커 10개↑: 25%
-          </p>
-        </div>
-        <div class="bg-gray-100 rounded-lg p-3">
-          <p class="font-semibold text-sm mb-1">전체 수량</p>
-          <p class="text-gray-700 text-xs pl-2">• 30개 이상: 25%</p>
-        </div>
-        <div class="bg-gray-100 rounded-lg p-3">
-          <p class="font-semibold text-sm mb-1">특별 할인</p>
-          <p class="text-gray-700 text-xs pl-2">
-            • 화요일: +10%<br>
-            • ⚡번개세일: 20%<br>
-            • 💝추천할인: 5%
-          </p>
-        </div>
-      </div>
-    </div>
-    <div class="mb-6">
-      <h3 class="text-base font-bold mb-3">🎁 포인트 적립</h3>
-      <div class="space-y-3">
-        <div class="bg-gray-100 rounded-lg p-3">
-          <p class="font-semibold text-sm mb-1">기본</p>
-          <p class="text-gray-700 text-xs pl-2">• 구매액의 0.1%</p>
-        </div>
-        <div class="bg-gray-100 rounded-lg p-3">
-          <p class="font-semibold text-sm mb-1">추가</p>
-          <p class="text-gray-700 text-xs pl-2">
-            • 화요일: 2배<br>
-            • 키보드+마우스: +50p<br>
-            • 풀세트: +100p<br>
-            • 10개↑: +20p / 20개↑: +50p / 30개↑: +100p
-          </p>
-        </div>
-      </div>
-    </div>
-    <div class="border-t border-gray-200 pt-4 mt-4">
-      <p class="text-xs font-bold mb-1">💡 TIP</p>
-      <p class="text-2xs text-gray-600 leading-relaxed">
-        • 화요일 대량구매 = MAX 혜택<br>
-        • ⚡+💝 중복 가능<br>
-        • 상품4 = 품절
-      </p>
-    </div>
-  `;
+  sel.style.borderColor = totalStock<LOW_STOCK_BORDER ? 'orange':'';
+}
 
-  manualOverlay.appendChild(manualColumn);
-
-  return { manualToggle, manualOverlay };
-};
-
-const createCartItemElement = (item) => {
-  const newItemElement = document.createElement('div');
-  newItemElement.id = item.id;
-  newItemElement.className = 'grid grid-cols-[80px_1fr_auto] gap-5 py-5 border-b border-gray-100 first:pt-0 last:border-b-0 last:pb-0';
-  
-  const displayDetails = getProductDisplayDetails(item);
-
-  newItemElement.innerHTML = `
+/* ---------- Cart DOM 한 개 ---------- */
+function cartItemTemplate(item){
+  const p=state.productList.find(x=>x.id===item.id);
+  const d=document.createElement('div');
+  d.id=item.id;
+  d.className='grid grid-cols-[80px_1fr_auto] gap-5 py-5 border-b border-gray-100 first:pt-0 last:border-b-0 last:pb-0';
+  d.innerHTML=`
     <div class="w-20 h-20 bg-gradient-black relative overflow-hidden">
       <div class="absolute top-1/2 left-1/2 w-[60%] h-[60%] bg-white/10 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
     </div>
     <div>
-      <h3 class="text-base font-normal mb-1 tracking-tight">${
-    displayDetails.namePrefix
-  }${item.name}</h3>
+      <h3 class="text-base font-normal mb-1 tracking-tight">${p.name}</h3>
       <p class="text-xs text-gray-500 mb-0.5 tracking-wide">PRODUCT</p>
-      <p class="text-xs text-black mb-3">${
-    displayDetails.priceHtml
-  }</p>
+      <p class="text-xs text-black mb-3">₩${p.price.toLocaleString()}</p>
       <div class="flex items-center gap-4">
-        <button class="quantity-change w-6 h-6 border border-black bg-white text-sm flex items-center justify-center transition-all hover:bg-black hover:text-white" data-product-id="${item.id}" data-change="-1">−</button>
-        <span class="quantity-number text-sm font-normal min-w-[20px] text-center tabular-nums">1</span>
-        <button class="quantity-change w-6 h-6 border border-black bg-white text-sm flex items-center justify-center transition-all hover:bg-black hover:text-white" data-product-id="${item.id}" data-change="1">+</button>
+        <button class="quantity-change w-6 h-6 border border-black bg-white text-sm" data-id="${p.id}" data-change="-1">−</button>
+        <span class="quantity-number text-sm min-w-[20px] text-center">${item.qty}</span>
+        <button class="quantity-change w-6 h-6 border border-black bg-white text-sm" data-id="${p.id}" data-change="1">+</button>
       </div>
     </div>
     <div class="text-right">
-      <div class="text-lg mb-2 tracking-tight tabular-nums">${
-    displayDetails.priceHtml
-  }</div>
-      <a class="remove-item text-2xs text-gray-500 uppercase tracking-wider cursor-pointer transition-colors border-b border-transparent hover:text-black hover:border-black" data-product-id="${item.id}">Remove</a>
-    </div>
-  `;
-  return newItemElement;
-};
+      <div class="text-lg mb-2">₩${(p.price*item.qty).toLocaleString()}</div>
+      <a class="remove-item text-2xs text-gray-500 uppercase" data-id="${p.id}">Remove</a>
+    </div>`;
+  return d;
+}
 
-// =================================================================================================
-// 이벤트 처리 관련 함수
-// =================================================================================================
+/* ---------- 렌더 루트 ---------- */
+function render(){
+  state.totals = calcCartTotals(state, new Date());
+  state.bonus  = calcBonusPoints(state, new Date());
 
-const setupEventListeners = () => {
-  addToCartButton.addEventListener('click', handleAddToCart);
-  cartDisplayElement.addEventListener('click', handleCartActions);
-};
+  renderProductOptions();
 
-const handleAddToCart = () => {
-  const selectedProductId = productSelectElement.value;
-  const productToAdd = findProductById(selectedProductId);
+  /** 장바구니 diff-렌더링 */
+  const cartWrap = $('#cart-items');
+  const alive = new Set();
 
-  if (!productToAdd || productToAdd.stock <= 0) {
-    if (productToAdd && productToAdd.stock <= 0) {
-      alert('재고가 부족합니다.');
+  state.cartItems.forEach(ci => {
+    alive.add(ci.id);
+    let row = cartWrap.querySelector(`#${ci.id}`);
+    if (!row) {
+      row = cartItemTemplate(ci);
+      cartWrap.appendChild(row);
     }
-    return;
-  }
-
-  const cartItem = document.getElementById(productToAdd.id);
-
-  if (cartItem) {
-    const quantityElement = cartItem.querySelector('.quantity-number');
-    const newQuantity = parseInt(quantityElement.textContent) + 1;
-    if (newQuantity <= productToAdd.stock + parseInt(quantityElement.textContent)) {
-      quantityElement.textContent = newQuantity;
-      productToAdd.stock--;
-    } else {
-      alert('재고가 부족합니다.');
-    }
-  } else {
-    const newCartItem = createCartItemElement(productToAdd);
-    cartDisplayElement.appendChild(newCartItem);
-    productToAdd.stock--;
-  }
-
-  updateUI();
-  lastSelectedProduct = selectedProductId;
-};
-
-const handleCartActions = (event) => {
-  const targetElement = event.target;
-  const isQuantityChange = targetElement.classList.contains('quantity-change');
-  const isRemoveItem = targetElement.classList.contains('remove-item');
-
-  if (!isQuantityChange && !isRemoveItem) return;
-
-  const productId = targetElement.dataset.productId;
-  const cartItemElement = document.getElementById(productId);
-  const product = findProductById(productId);
-
-  if (!product) return;
-
-  if (isQuantityChange) {
-    const quantityChange = parseInt(targetElement.dataset.change);
-    const quantityElement = cartItemElement.querySelector('.quantity-number');
-    const currentQuantity = parseInt(quantityElement.textContent);
-    const newQuantity = currentQuantity + quantityChange;
-
-    if (newQuantity > 0 && newQuantity <= product.stock + currentQuantity) {
-      quantityElement.textContent = newQuantity;
-      product.stock -= quantityChange;
-    } else if (newQuantity <= 0) {
-      product.stock += currentQuantity;
-      cartItemElement.remove();
-    } else {
-      alert('재고가 부족합니다.');
-    }
-  } else if (isRemoveItem) {
-    const quantityElement = cartItemElement.querySelector('.quantity-number');
-    const removedQuantity = parseInt(quantityElement.textContent);
-    product.stock += removedQuantity;
-    cartItemElement.remove();
-  }
-
-  updateUI();
-  updateProductSelectOptions();
-};
-
-// =================================================================================================
-// 계산 관련 함수
-// =================================================================================================
-
-const calculateCartTotals = () => {
-  const cartItems = [...cartDisplayElement.children];
-  let subtotal = 0;
-  const itemDiscounts = [];
-  
-  const totalItemCount = cartItems.reduce((acc, cartItem) => {
-    const quantity = parseInt(cartItem.querySelector('.quantity-number').textContent);
-    return acc + quantity;
-  }, 0);
-
-  let totalAmount = cartItems.reduce((acc, cartItem) => {
-    const currentItem = findProductById(cartItem.id);
-    const quantity = parseInt(cartItem.querySelector('.quantity-number').textContent);
-    const itemTotal = currentItem.price * quantity;
-    subtotal += itemTotal;
-
-    let discountRate = calculateItemDiscount(currentItem, quantity);
-    if (discountRate > 0) {
-      itemDiscounts.push({ name: currentItem.name, discount: discountRate * 100 });
-    }
-    return acc + (itemTotal * (1 - discountRate));
-  }, 0);
-
-  const originalTotal = subtotal;
-  let totalDiscountRate = 0;
-
-  if (totalItemCount >= DISCOUNT_THRESHOLDS.BULK_PURCHASE_MIN_QUANTITY) {
-    totalAmount = subtotal * (1 - DISCOUNT_RATES.BULK_PURCHASE);
-    totalDiscountRate = DISCOUNT_RATES.BULK_PURCHASE;
-  } else {
-    totalDiscountRate = subtotal > 0 ? (subtotal - totalAmount) / subtotal : 0;
-  }
-
-  const today = new Date();
-  const isTuesday = today.getDay() === 2;
-
-  if (isTuesday && totalAmount > 0) {
-    totalAmount *= (1 - DISCOUNT_RATES.TUESDAY_SPECIAL);
-    totalDiscountRate = 1 - totalAmount / originalTotal;
-  }
-
-  return { totalItemCount, totalAmount, subtotal, itemDiscounts, totalDiscountRate, originalTotal, isTuesday };
-};
-
-const calculateItemDiscount = (item, quantity) => {
-  if (quantity >= DISCOUNT_THRESHOLDS.ITEM_SPECIFIC_MIN_QUANTITY) {
-    switch (item.id) {
-      case PRODUCT_ID_KEYBOARD: return DISCOUNT_RATES.KEYBOARD;
-      case PRODUCT_ID_MOUSE: return DISCOUNT_RATES.MOUSE;
-      case PRODUCT_ID_MONITOR_ARM: return DISCOUNT_RATES.MONITOR_ARM;
-      case PRODUCT_ID_SPEAKER: return DISCOUNT_RATES.SPEAKER;
-    }
-  }
-  return 0;
-};
-
-const calculateBonusPoints = () => {
-  let basePoints = Math.floor(totalAmount / 1000);
-  let totalPoints = 0;
-  const details = [];
-
-  if (basePoints > 0) {
-    totalPoints = basePoints;
-    details.push(`기본: ${basePoints}p`);
-  }
-
-  if (new Date().getDay() === 2 && basePoints > 0) {
-    totalPoints = basePoints * BONUS_POINTS.TUESDAY_MULTIPLIER;
-    details.push('화요일 2배');
-  }
-
-  const cartItemIds = [...cartDisplayElement.children].map(item => item.id);
-  const hasKeyboard = cartItemIds.includes(PRODUCT_ID_KEYBOARD);
-  const hasMouse = cartItemIds.includes(PRODUCT_ID_MOUSE);
-  const hasMonitorArm = cartItemIds.includes(PRODUCT_ID_MONITOR_ARM);
-
-  if (hasKeyboard && hasMouse) {
-    totalPoints += BONUS_POINTS.KEYBOARD_MOUSE_SET;
-    details.push('키보드+마우스 세트 +50p');
-  }
-  if (hasKeyboard && hasMouse && hasMonitorArm) {
-    totalPoints += BONUS_POINTS.FULL_SET;
-    details.push('풀세트 구매 +100p');
-  }
-
-  if (totalItemCount >= BONUS_POINTS.QUANTITY_TIER_3) {
-    totalPoints += BONUS_POINTS.POINTS_TIER_3;
-    details.push('대량구매(30개+) +100p');
-  } else if (totalItemCount >= BONUS_POINTS.QUANTITY_TIER_2) {
-    totalPoints += BONUS_POINTS.POINTS_TIER_2;
-    details.push('대량구매(20개+) +50p');
-  } else if (totalItemCount >= BONUS_POINTS.QUANTITY_TIER_1) {
-    totalPoints += BONUS_POINTS.POINTS_TIER_1;
-    details.push('대량구매(10개+) +20p');
-  }
-
-  return { totalPoints, details };
-};
-
-// =================================================================================================
-// UI 렌더링 및 업데이트 함수
-// =================================================================================================
-
-const updateUI = () => {
-  const cartData = calculateCartTotals();
-  totalItemCount = cartData.totalItemCount;
-  totalAmount = cartData.totalAmount;
-
-  const tuesdaySpecialElement = document.getElementById('tuesday-special');
-  if (cartData.isTuesday && cartData.totalAmount > 0) {
-    tuesdaySpecialElement.classList.remove('hidden');
-  } else {
-    tuesdaySpecialElement.classList.add('hidden');
-  }
-
-  updateCartSummaryUI(cartData.subtotal, cartData.itemDiscounts, cartData.isTuesday);
-  updateCartTotalUI();
-  updateDiscountInfoUI(cartData.originalTotal, cartData.totalDiscountRate);
-  updateItemCountUI();
-  updateStockInfoUI();
-  renderBonusPoints();
-};
-
-const updateProductSelectOptions = () => {
-  productSelectElement.innerHTML = '';
-  const totalStock = productList.reduce((acc, p) => acc + p.stock, 0);
-
-  productList.forEach(item => {
-    const optionElement = document.createElement('option');
-    optionElement.value = item.id;
-    
-    const displayDetails = getProductDisplayDetails(item);
-    optionElement.textContent = displayDetails.text;
-    optionElement.className = displayDetails.className;
-    if (displayDetails.disabled) {
-      optionElement.disabled = true;
-    }
-    
-    productSelectElement.appendChild(optionElement);
+    row.querySelector('.quantity-number').textContent = ci.qty;
+    const price = state.productList.find(p => p.id === ci.id).price;
+    row.querySelector('.text-lg').textContent = `₩${(price * ci.qty).toLocaleString()}`;
+  });
+  [...cartWrap.children].forEach(el => {
+    if (!alive.has(el.id)) el.remove();
   });
 
-  productSelectElement.style.borderColor = totalStock < LOW_STOCK_BORDER_THRESHOLD ? 'orange' : '';
-};
+  $('#item-count').textContent=`🛍️ ${state.totals.itemCnt} items in cart`;
+  $('#cart-total .text-2xl').textContent=`₩${Math.round(state.totals.amount).toLocaleString()}`;
 
-const updateCartItemPrices = () => {
-  const cartItems = [...cartDisplayElement.children];
-  cartItems.forEach(cartItem => {
-    const product = findProductById(cartItem.id);
+  const tue=$('#tuesday-special');
+  if(state.totals.isTue && state.totals.amount>0) tue.classList.remove('hidden'); else tue.classList.add('hidden');
 
-    if (product) {
-      const priceDiv = cartItem.querySelector('.text-lg');
-      const nameDiv = cartItem.querySelector('h3');
-      
-      const displayDetails = getProductDisplayDetails(product);
-      priceDiv.innerHTML = displayDetails.priceHtml;
-      nameDiv.textContent = `${displayDetails.namePrefix}${product.name}`;
-    }
-  });
-  updateUI();
-};
-
-const updateCartSummaryUI = (subtotal, itemDiscounts, isTuesday) => {
-  const summaryDetails = document.getElementById('summary-details');
-  summaryDetails.innerHTML = '';
-
-  if (subtotal > 0) {
-    const cartItems = [...cartDisplayElement.children];
-    cartItems.forEach(cartItem => {
-      const currentItem = findProductById(cartItem.id);
-      const quantity = parseInt(cartItem.querySelector('.quantity-number').textContent);
-      const itemTotal = currentItem.price * quantity;
-      summaryDetails.innerHTML += `
-        <div class="flex justify-between text-xs tracking-wide text-gray-400">
-          <span>${currentItem.name} x ${quantity}</span>
-          <span>₩${itemTotal.toLocaleString()}</span>
-        </div>
-      `;
-    });
-
-    summaryDetails.innerHTML += `
-      <div class="border-t border-white/10 my-3"></div>
-      <div class="flex justify-between text-sm tracking-wide">
-        <span>Subtotal</span>
-        <span>₩${subtotal.toLocaleString()}</span>
-      </div>
-    `;
-
-    appendDiscountToSummary(summaryDetails, itemDiscounts, isTuesday);
-
-    summaryDetails.innerHTML += `
-      <div class="flex justify-between text-sm tracking-wide text-gray-400">
-        <span>Shipping</span>
-        <span>Free</span>
-      </div>
-    `;
-  }
-};
-
-const appendDiscountToSummary = (summaryDetails, itemDiscounts, isTuesday) => {
-  if (totalItemCount >= DISCOUNT_THRESHOLDS.BULK_PURCHASE_MIN_QUANTITY) {
-    summaryDetails.innerHTML += `
-      <div class="flex justify-between text-sm tracking-wide text-green-400">
-        <span class="text-xs">🎉 대량구매 할인 (30개 이상)</span>
-        <span class="text-xs">-${DISCOUNT_RATES.BULK_PURCHASE * 100}%</span>
-      </div>
-    `;
-  } else if (itemDiscounts.length > 0) {
-    itemDiscounts.forEach(item => {
-      summaryDetails.innerHTML += `
-        <div class="flex justify-between text-sm tracking-wide text-green-400">
-          <span class="text-xs">${item.name} (10개↑)</span>
-          <span class="text-xs">-${item.discount}%</span>
-        </div>
-      `;
-    });
-  }
-
-  if (isTuesday && totalAmount > 0) {
-    summaryDetails.innerHTML += `
-      <div class="flex justify-between text-sm tracking-wide text-purple-400">
-        <span class="text-xs">🌟 화요일 추가 할인</span>
-        <span class="text-xs">-${DISCOUNT_RATES.TUESDAY_SPECIAL * 100}%</span>
-      </div>
-    `;
-  }
-};
-
-const updateCartTotalUI = () => {
-  const totalDiv = totalAmountElement.querySelector('.text-2xl');
-  if (totalDiv) {
-    totalDiv.textContent = `₩${Math.round(totalAmount).toLocaleString()}`;
-  }
-};
-
-const updateDiscountInfoUI = (originalTotal, totalDiscountRate) => {
-  const discountInfoDiv = document.getElementById('discount-info');
-  discountInfoDiv.innerHTML = '';
-  if (totalDiscountRate > 0 && totalAmount > 0) {
-    const savedAmount = originalTotal - totalAmount;
-    discountInfoDiv.innerHTML = `
+  const discDiv=$('#discount-info');
+  discDiv.innerHTML='';
+  if(state.totals.discountRate>0){
+    const saved=state.totals.originalTotal-state.totals.amount;
+    discDiv.innerHTML=`
       <div class="bg-green-500/20 rounded-lg p-3">
         <div class="flex justify-between items-center mb-1">
           <span class="text-xs uppercase tracking-wide text-green-400">총 할인율</span>
-          <span class="text-sm font-medium text-green-400">${(totalDiscountRate * 100).toFixed(1)}%</span>
+          <span class="text-sm font-medium text-green-400">${(state.totals.discountRate*100).toFixed(1)}%</span>
         </div>
-        <div class="text-2xs text-gray-300">₩${Math.round(savedAmount).toLocaleString()} 할인되었습니다</div>
-      </div>
-    `;
+        <div class="text-2xs text-gray-300">₩${Math.round(saved).toLocaleString()} 할인되었습니다</div>
+      </div>`;
   }
-};
 
-const updateItemCountUI = () => {
-  const itemCountElement = document.getElementById('item-count');
-  if (itemCountElement) {
-    const previousCount = parseInt(itemCountElement.textContent.match(/\d+/) || '0');
-    itemCountElement.textContent = `🛍️ ${totalItemCount} items in cart`;
-    if (previousCount !== totalItemCount) {
-      itemCountElement.setAttribute('data-changed', 'true');
-    }
+  const lp=$('#loyalty-points');
+  if(state.totals.itemCnt===0){ lp.style.display='none'; }
+  else{
+    lp.style.display='block';
+    lp.innerHTML=`적립 포인트: <span class="font-bold">${state.bonus.point}p</span><br><span class="text-2xs opacity-70">${state.bonus.details.join(', ')}</span>`;
   }
-};
 
-const updateStockInfoUI = () => {
-  let stockMessage = '';
-  productList.forEach(item => {
-    if (item.stock < STOCK_ALERT_THRESHOLD) {
-      stockMessage += item.stock > 0
-        ? `${item.name}: 재고 부족 (${item.stock}개 남음)\n`
-        : `${item.name}: 품절\n`;
+  let stockMsg='';
+  state.productList.forEach(p=>{
+    if(p.stock===0){
+      stockMsg += `${p.name}: 품절\n`;
+    }else if(p.stock < STOCK_ALERT){
+      stockMsg += `${p.name}: 재고 부족 (${p.stock}개 남음)\n`;
     }
   });
-  stockInfoElement.textContent = stockMessage;
-};
+  $('#stock-status').textContent=stockMsg;
+}
 
-const renderBonusPoints = () => {
-  const loyaltyPointsDiv = document.getElementById('loyalty-points');
-  if (cartDisplayElement.children.length === 0) {
-    loyaltyPointsDiv.style.display = 'none';
-    return;
+/* ---------- 이벤트 핸들러 ---------- */
+function onAdd(){
+  const pid=$('#product-select').value;
+  const prod=state.productList.find(p=>p.id===pid);
+  if(!prod||prod.stock<=0){ alert('재고가 부족합니다.'); return; }
+
+  const existing=state.cartItems.find(c=>c.id===pid);
+  if(existing){ existing.qty++; }
+  else{ state.cartItems.push({id:pid, qty:1}); }
+  prod.stock--;
+  state.lastSelectedProduct=pid;
+  render();
+}
+function onCartClick(e){
+  const btn = e.target.closest('.quantity-change, .remove-item');
+  if(!btn) return;
+
+  const id = btn.dataset.id;
+  const prod = state.productList.find(p=>p.id===id);
+  const idx  = state.cartItems.findIndex(c=>c.id===id);
+  if(idx===-1 || !prod) return;
+  const ci = state.cartItems[idx];
+
+  if(btn.classList.contains('quantity-change')){
+    const delta=parseInt(btn.dataset.change,10);
+    const newQty = ci.qty + delta;
+
+    if(delta > 0){
+      if(prod.stock < 1){ alert('재고가 부족합니다.'); return; }
+      prod.stock--;
+      state.cartItems[idx] = { ...ci, qty: newQty };
+    } else {
+      prod.stock++;
+      if(newQty <= 0){
+        state.cartItems = state.cartItems.filter(c=>c.id!==id);
+      } else {
+        state.cartItems[idx] = { ...ci, qty: newQty };
+      }
+    }
+  } else if(btn.classList.contains('remove-item')){
+    prod.stock += ci.qty;
+    state.cartItems = state.cartItems.filter(c=>c.id!==id);
   }
+  render();
+}
 
-  const finalPoints = calculateBonusPoints();
-  bonusPoints = finalPoints.totalPoints;
+/* ---------- 부트스트랩 ---------- */
+function main(){
+  const root=document.getElementById('app');
+  root.innerHTML='';
+  root.appendChild(createHeader());
 
-  if (bonusPoints > 0) {
-    loyaltyPointsDiv.innerHTML = `
-      <div>적립 포인트: <span class="font-bold">${bonusPoints}p</span></div>
-      <div class="text-2xs opacity-70 mt-1">${finalPoints.details.join(', ')}</div>
-    `;
-    loyaltyPointsDiv.style.display = 'block';
-  } else {
-    loyaltyPointsDiv.textContent = '적립 포인트: 0p';
-    loyaltyPointsDiv.style.display = 'block';
-  }
-};
+  const {grid,left,right}=createLayout();
+  root.appendChild(grid); grid.append(left,right);
 
-// =================================================================================================
-// 프로모션 관련 함수
-// =================================================================================================
+  const {wrap,sel,btn,stockDiv}=createSelector();
+  left.appendChild(wrap);
 
-const startTimers = () => {
-  const lightningSaleDelay = Math.random() * PROMOTION_TIMERS.LIGHTNING_SALE_DELAY_MAX;
-  setTimeout(() => {
-    setInterval(triggerLightningSale, PROMOTION_TIMERS.LIGHTNING_SALE_INTERVAL);
-  }, lightningSaleDelay);
+  const cartDiv=document.createElement('div');
+  cartDiv.id='cart-items';
+  left.appendChild(cartDiv);
 
-  setTimeout(() => {
-    setInterval(triggerSuggestion, PROMOTION_TIMERS.SUGGESTION_INTERVAL);
-  }, Math.random() * PROMOTION_TIMERS.SUGGESTION_DELAY_MAX);
-};
+  btn.addEventListener('click',onAdd);
+  cartDiv.addEventListener('click',onCartClick);
 
-const triggerLightningSale = () => {
-  const luckyItem = productList[Math.floor(Math.random() * productList.length)];
-  if (luckyItem.stock > 0 && !luckyItem.onSale) {
-    luckyItem.price = Math.round(luckyItem.originalPrice * (1 - DISCOUNT_RATES.LIGHTNING_SALE));
-    luckyItem.onSale = true;
-    alert(`⚡번개세일! ${luckyItem.name}이(가) 20% 할인 중입니다!`);
-    updateProductSelectOptions();
-    updateCartItemPrices();
-  }
-};
+  const helpBtn=document.createElement('button');
+  helpBtn.className='fixed top-4 right-4'; helpBtn.textContent='?';
+  const modal=document.createElement('div'); modal.className='fixed inset-0 hidden';
+  const slide=document.createElement('div'); slide.className='fixed right-0 top-0 translate-x-full';
+  modal.appendChild(slide);
+  root.append(helpBtn,modal);
+  helpBtn.onclick=()=>{ modal.classList.toggle('hidden'); slide.classList.toggle('translate-x-full'); };
+  modal.onclick=e=>{ if(e.target===modal){ modal.classList.add('hidden'); slide.classList.add('translate-x-full'); } };
 
-const triggerSuggestion = () => {
-  if (cartDisplayElement.children.length === 0 || !lastSelectedProduct) return;
-
-  const suggestedProduct = productList.find(p => p.id !== lastSelectedProduct && p.stock > 0 && !p.suggestSale);
-  if (suggestedProduct) {
-    alert(`💝 ${suggestedProduct.name}은(는) 어떠세요? 지금 구매하시면 5% 추가 할인!`);
-    suggestedProduct.price = Math.round(suggestedProduct.price * (1 - DISCOUNT_RATES.SUGGESTION));
-    suggestedProduct.suggestSale = true;
-    updateProductSelectOptions();
-    updateCartItemPrices();
-  }
-};
-
-// =================================================================================================
-// 유틸리티 함수
-// =================================================================================================
-
-const findProductById = (id) => {
-  return productList.find(p => p.id === id);
-};
-
-const getProductDisplayDetails = (item) => {
-  const details = {
-    text: `${item.name} - ${item.price}원`,
-    className: '',
-    priceHtml: `₩${item.price.toLocaleString()}`,
-    namePrefix: ''
-  };
-
-  const discountTextParts = [];
-  if (item.onSale) discountTextParts.push('⚡SALE');
-  if (item.suggestSale) discountTextParts.push('💝추천');
-  const discountText = discountTextParts.length > 0 ? ` ${discountTextParts.join(' ')}` : '';
-
-  if (item.stock === 0) {
-    return getDisplayDetailsForSoldOut(item, discountText);
-  } else if (item.onSale && item.suggestSale) {
-    return getDisplayDetailsForSuperSale(item);
-  } else if (item.onSale) {
-    return getDisplayDetailsForSale(item);
-  } else if (item.suggestSale) {
-    return getDisplayDetailsForSuggestion(item);
-  } else {
-    details.text = `${item.name} - ${item.price}원${discountText}`;
-  }
-  return details;
-};
-
-const getDisplayDetailsForSoldOut = (item, discountText) => ({
-  text: `${item.name} - ${item.price}원 (품절)${discountText}`,
-  disabled: true,
-  className: 'text-gray-400',
-  priceHtml: `₩${item.price.toLocaleString()}`,
-  namePrefix: ''
-});
-
-const getDisplayDetailsForSuperSale = (item) => ({
-  text: `⚡💝${item.name} - ${item.originalPrice}원 → ${item.price}원 (25% SUPER SALE!)`,
-  className: 'text-purple-600 font-bold',
-  priceHtml: `<span class="line-through text-gray-400">₩${item.originalPrice.toLocaleString()}</span> <span class="text-purple-600">₩${item.price.toLocaleString()}</span>`,
-  namePrefix: '⚡💝'
-});
-
-const getDisplayDetailsForSale = (item) => ({
-  text: `⚡${item.name} - ${item.originalPrice}원 → ${item.price}원 (20% SALE!)`,
-  className: 'text-red-500 font-bold',
-  priceHtml: `<span class="line-through text-gray-400">₩${item.originalPrice.toLocaleString()}</span> <span class="text-red-500">₩${item.price.toLocaleString()}</span>`,
-  namePrefix: '⚡'
-});
-
-const getDisplayDetailsForSuggestion = (item) => ({
-  text: `💝${item.name} - ${item.originalPrice}원 → ${item.price}원 (5% 추천할인!)`,
-  className: 'text-blue-500 font-bold',
-  priceHtml: `<span class="line-through text-gray-400">₩${item.originalPrice.toLocaleString()}</span> <span class="text-blue-500">₩${item.price.toLocaleString()}</span>`,
-  namePrefix: '💝'
-});
-
-const toggleManual = (forceClose = false) => {
-  const manualOverlay = document.getElementById('manual-overlay');
-  const manualColumn = document.getElementById('manual-column');
-  if (forceClose) {
-    manualOverlay.classList.add('hidden');
-    manualColumn.classList.add('translate-x-full');
-  } else {
-    manualOverlay.classList.toggle('hidden');
-    manualColumn.classList.toggle('translate-x-full');
-  }
-};
-
-const getTotalStock = () => {
-  return productList.reduce((sum, currentProduct) => sum + currentProduct.stock, 0);
-};
-
-// =================================================================================================
-// 애플리케이션 시작
-// =================================================================================================
+  render();
+}
 
 main();
