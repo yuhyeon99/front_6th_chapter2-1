@@ -2,7 +2,7 @@ import { state } from './state.js';
 import * as constants from './constants.js';
 import { calcCartTotals, calcBonusPoints } from './calculation.js';
 import { $ } from './utils.js';
-import { cartItemTemplate } from './components/CartItem.js';
+import { CartItem } from './components/CartItem.js';
 
 function renderProductOptions() {
     const sel = $('#product-select');
@@ -43,7 +43,7 @@ export function render() {
         alive.add(ci.id);
         let row = cartWrap.querySelector(`#${ci.id}`);
         if (!row) {
-            row = cartItemTemplate(ci);
+            row = CartItem(ci);
             cartWrap.appendChild(row);
         }
         row.querySelector('.quantity-number').textContent = ci.qty;

@@ -1,4 +1,4 @@
-export function createSelector() {
+export function Selector() {
     const wrap = document.createElement('div');
     wrap.className = 'mb-6 pb-6 border-b border-gray-200';
 

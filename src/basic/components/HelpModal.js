@@ -1,4 +1,4 @@
-export function createHelpModal() {
+export function HelpModal() {
     const helpBtn = document.createElement('button');
     helpBtn.className = 'fixed top-4 right-4'; helpBtn.textContent = '?';
     const modal = document.createElement('div'); modal.className = 'fixed inset-0 hidden';
