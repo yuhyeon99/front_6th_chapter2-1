@@ -21,6 +21,10 @@ function createShoppingCart() {
         QTY10: 20, QTY20: 50, QTY30: 100,
     };
     const STOCK_ALERT = 5, LOW_STOCK_BORDER = 50;
+    const ERROR_MESSAGES = {
+        OUT_OF_STOCK: '재고가 부족합니다.',
+        INVALID_QUANTITY: '유효하지 않은 수량입니다.',
+    };
 
     /* ---------- 상태 ---------- */
     const state = {
@@ -287,7 +291,7 @@ function createShoppingCart() {
     function onAdd() {
         const pid = $('#product-select').value;
         const prod = state.productList.find(p => p.id === pid);
-        if (!prod || prod.stock <= 0) { alert('재고가 부족합니다.'); return; }
+        if (!prod || prod.stock <= 0) { alert(ERROR_MESSAGES.OUT_OF_STOCK); return; }
 
         const existing = state.cartItems.find(c => c.id === pid);
         if (existing) { existing.qty++; }
@@ -309,10 +313,14 @@ function createShoppingCart() {
 
         if (btn.classList.contains('quantity-change')) {
             const delta = parseInt(btn.dataset.change, 10);
+            if (isNaN(delta)) {
+                alert(ERROR_MESSAGES.INVALID_QUANTITY);
+                return;
+            }
             const newQty = ci.qty + delta;
 
             if (delta > 0 && prod.stock < 1) {
-                alert('재고가 부족합니다.');
+                alert(ERROR_MESSAGES.OUT_OF_STOCK);
                 return;
             }
 
