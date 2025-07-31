@@ -1,14 +1,18 @@
 export const DISCOUNT_THRESHOLDS = {
-  ITEM: 3,
-  BULK: 10,
+  ITEM: 10, // main.original.js에서는 10개 이상일 때 개별 상품 할인
+  BULK: 30, // main.original.js에서는 30개 이상일 때 전체 수량 할인
 };
 
 export const DISCOUNT_RATES = {
-  KEYBOARD: 0.15,
-  MOUSE: 0.1,
-  MONITOR_ARM: 0.1,
-  BULK: 0.2,
-  TUESDAY: 0.1,
+  p1: 0.10, // 키보드 10개 이상 10%
+  p2: 0.15, // 마우스 10개 이상 15%
+  p3: 0.20, // 모니터암 10개 이상 20%
+  p4: 0.05, // 파우치 10개 이상 5%
+  p5: 0.25, // 스피커 10개 이상 25%
+  BULK: 0.25, // 30개 이상 25%
+  TUESDAY: 0.10, // 화요일 10%
+  LIGHTNING_SALE: 0.20, // 번개세일 20%
+  SUGGEST_SALE: 0.05, // 추천할인 5%
 };
 
 export const BONUS = {
@@ -20,6 +24,4 @@ export const BONUS = {
   QTY30: 100,
 };
 
-export const PRODUCT_ID_KEYBOARD = 'keyboard';
-export const PRODUCT_ID_MOUSE = 'mouse';
-export const PRODUCT_ID_MONITOR_ARM = 'monitor-arm';
+export const STOCK_ALERT = 5; // main.original.js에서 재고 부족 기준은 5개 미만

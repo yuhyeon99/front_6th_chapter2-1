@@ -2,41 +2,47 @@ import { CartState } from '../types/cart';
 import { DISCOUNT_THRESHOLDS, DISCOUNT_RATES, BONUS, PRODUCT_ID_KEYBOARD, PRODUCT_ID_MOUSE, PRODUCT_ID_MONITOR_ARM } from './constants';
 
 function calcItemDiscount(pid: string, qty: number): number {
+  if (qty < DISCOUNT_THRESHOLDS.ITEM) return 0;
   const rates: { [key: string]: number } = {
-    [PRODUCT_ID_KEYBOARD]: DISCOUNT_RATES.KEYBOARD,
-    [PRODUCT_ID_MOUSE]: DISCOUNT_RATES.MOUSE,
-    [PRODUCT_ID_MONITOR_ARM]: DISCOUNT_RATES.MONITOR_ARM,
+    p1: DISCOUNT_RATES.p1,
+    p2: DISCOUNT_RATES.p2,
+    p3: DISCOUNT_RATES.p3,
+    p4: DISCOUNT_RATES.p4,
+    p5: DISCOUNT_RATES.p5,
   };
-  return qty >= DISCOUNT_THRESHOLDS.ITEM ? rates[pid] || 0 : 0;
+  return rates[pid] || 0;
 }
 
-export function calcCartTotals(st: CartState, date: Date = new Date()) {
-  const cart = st.cartItems;
-
+export function calcCartTotals(cartItems: CartItem[], productList: Product[], date: Date = new Date()) {
   let subtotal = 0;
   let amount = 0;
   const itemDiscounts: { name: string; discount: number }[] = [];
 
-  const itemCnt = cart.reduce((acc, c) => acc + c.quantity, 0);
+  const itemCnt = cartItems.reduce((acc, c) => acc + c.quantity, 0);
 
-  cart.forEach((ci) => {
-    const itemPrice = ci.price * ci.quantity;
+  cartItems.forEach((ci) => {
+    const product = productList.find(p => p.id === ci.id);
+    if (!product) return;
+
+    const itemPrice = product.val * ci.quantity;
     subtotal += itemPrice;
     const rate = calcItemDiscount(ci.id, ci.quantity);
-    if (rate > 0) itemDiscounts.push({ name: ci.name, discount: rate * 100 });
+    if (rate > 0) itemDiscounts.push({ name: product.name, discount: rate * 100 });
     amount += itemPrice * (1 - rate);
   });
 
   let discountRate = subtotal > 0 ? (subtotal - amount) / subtotal : 0;
+  let originalTotal = subtotal;
+
   if (itemCnt >= DISCOUNT_THRESHOLDS.BULK) {
-    amount = subtotal * (1 - DISCOUNT_RATES.BULK);
+    amount = originalTotal * (1 - DISCOUNT_RATES.BULK);
     discountRate = DISCOUNT_RATES.BULK;
   }
 
   const isTue = date.getDay() === 2;
   if (isTue && amount > 0) {
-    amount *= 1 - DISCOUNT_RATES.TUESDAY;
-    discountRate = 1 - (amount / subtotal);
+    amount *= (1 - DISCOUNT_RATES.TUESDAY);
+    discountRate = 1 - (amount / originalTotal);
   }
 
   return {
@@ -46,12 +52,12 @@ export function calcCartTotals(st: CartState, date: Date = new Date()) {
     itemDiscounts,
     discountRate,
     isTue,
-    originalTotal: subtotal,
+    originalTotal,
   };
 }
 
-export function calcBonusPoints(st: CartState, date: Date = new Date()) {
-  const { amount, itemCnt } = calcCartTotals(st, date);
+export function calcBonusPoints(cartItems: CartItem[], productList: Product[], date: Date = new Date()) {
+  const { amount, itemCnt } = calcCartTotals(cartItems, productList, date);
   let base = Math.floor(amount / 1000);
   let pt = base;
   const det: string[] = [];
@@ -62,10 +68,10 @@ export function calcBonusPoints(st: CartState, date: Date = new Date()) {
     det.push('화요일 2배');
   }
 
-  const ids = st.cartItems.map((c) => c.id);
-  const hasK = ids.includes(PRODUCT_ID_KEYBOARD),
-    hasM = ids.includes(PRODUCT_ID_MOUSE),
-    hasA = ids.includes(PRODUCT_ID_MONITOR_ARM);
+  const ids = cartItems.map((c) => c.id);
+  const hasK = ids.includes('p1'),
+    hasM = ids.includes('p2'),
+    hasA = ids.includes('p3');
   if (hasK && hasM) {
     pt += BONUS.SET_KM;
     det.push('키보드+마우스 세트 +50p');
