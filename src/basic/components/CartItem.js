@@ -1,9 +1,10 @@
 export function CartItem(item, state) {
-    const p = state.productList.find(x => x.id === item.id);
-    const d = document.createElement('div');
-    d.id = item.id;
-    d.className = 'grid grid-cols-[80px_1fr_auto] gap-5 py-5 border-b border-gray-100 first:pt-0 last:border-b-0 last:pb-0';
-    d.innerHTML = `
+  const p = state.productList.find((x) => x.id === item.id);
+  const d = document.createElement('div');
+  d.id = item.id;
+  d.className =
+    'grid grid-cols-[80px_1fr_auto] gap-5 py-5 border-b border-gray-100 first:pt-0 last:border-b-0 last:pb-0';
+  d.innerHTML = `
 <div class="w-20 h-20 bg-gradient-black relative overflow-hidden">
   <div class="absolute top-1/2 left-1/2 w-[60%] h-[60%] bg-white/10 -translate-x-1/2 -translate-y-1/2 rotate-45"></div>
 </div>
@@ -21,5 +22,5 @@ export function CartItem(item, state) {
   <div class="text-lg mb-2">₩${(p.price * item.qty).toLocaleString()}</div>
   <a class="remove-item text-2xs text-gray-500 uppercase" data-id="${p.id}">Remove</a>
 </div>`;
-    return d;
+  return d;
 }

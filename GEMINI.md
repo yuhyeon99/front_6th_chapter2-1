@@ -19,13 +19,16 @@
 You MUST follow these rules when writing any code:
 
 ### CORE DESIGN PRINCIPLES
+
 - **DRY**: NEVER repeat the same code
 - **KISS**: Write code as simply as possible
 - **YAGNI**: Do NOT write unnecessary code
 - **Single Responsibility**: Functions MUST be under 20 lines and have ONE clear responsibility
 
 ### CODE ORGANIZATION RULES
+
 Apply these 4 organization principles:
+
 - **Proximity**: Group related elements with blank lines
 - **Commonality**: Group related functionality into functions
 - **Similarity**: Use similar names and positions for similar roles
@@ -34,6 +37,7 @@ Apply these 4 organization principles:
 ### NAMING REQUIREMENTS
 
 #### Naming Principles (ALL MUST BE FOLLOWED)
+
 1. **Predictable**: Name must allow prediction of value, type, and return value
 2. **Contextual**: Add descriptive adjectives or nouns for context
 3. **Clear**: Remove unnecessary words while maintaining clear meaning
@@ -43,6 +47,7 @@ Apply these 4 organization principles:
 #### REQUIRED Naming Patterns
 
 **Action Functions - USE THESE PATTERNS:**
+
 ```
 // Creation: create~(), add~(), push~(), insert~(), new~(), append~(), spawn~(), make~(), build~(), generate~()
 // Retrieval: get~(), fetch~(), query~()
@@ -58,6 +63,7 @@ Apply these 4 organization principles:
 ```
 
 **Data Variables - USE THESE PATTERNS:**
+
 ```
 // Quantities: count~, sum~, num~, min~, max~, total
 // State: is~, has~, current~, selected~
@@ -72,6 +78,7 @@ Apply these 4 organization principles:
 ```
 
 ### ABSTRACTION RULES
+
 - **Data Abstraction**: Simplify data structure and processing methods
 - **Process Abstraction**: Encapsulate complex logic into simple interfaces
 - **Appropriate Level**: Do NOT over-abstract or under-abstract
@@ -87,12 +94,13 @@ Before finalizing ANY code, you MUST verify:
 5. ✅ **Maintained consistent formatting**
 
 ### FORBIDDEN PRACTICES
+
 - ❌ Do NOT mix similar terms (`display` vs `show`)
 - ❌ Do NOT write functions longer than 20 lines
 - ❌ Do NOT repeat code patterns
 - ❌ Do NOT use unclear or ambiguous names
 - ❌ Do NOT violate naming consistency across codebase
 
-
 ## COMPLIANCE REQUIREMENT
+
 ALL code output MUST comply with these rules. No exceptions.

@@ -1,3 +1,4 @@
 export const pointState = {
-    point: 0, details: []
+  point: 0,
+  details: [],
 };

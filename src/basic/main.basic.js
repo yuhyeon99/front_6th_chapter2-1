@@ -9,40 +9,41 @@ import { HelpModal } from './components/HelpModal.js';
 import { render } from './render.js';
 
 function createShoppingCart() {
-    const state = {
-        productList: productList,
-        cartItems: cartState.cartItems,
-        lastSelectedProduct: cartState.lastSelectedProduct,
-        totals: cartState.totals,
-        bonus: pointState,
-    };
+  const state = {
+    productList: productList,
+    cartItems: cartState.cartItems,
+    lastSelectedProduct: cartState.lastSelectedProduct,
+    totals: cartState.totals,
+    bonus: pointState,
+  };
 
-    /* ---------- 부트스트랩 ---------- */
-    function init() {
-        const root = document.getElementById('app');
-        root.innerHTML = '';
-        root.appendChild(Header());
+  /* ---------- 부트스트랩 ---------- */
+  function init() {
+    const root = document.getElementById('app');
+    root.innerHTML = '';
+    root.appendChild(Header());
 
-        const { grid, left, right } = Layout();
-        root.appendChild(grid); grid.append(left, right);
+    const { grid, left, right } = Layout();
+    root.appendChild(grid);
+    grid.append(left, right);
 
-        const { wrap, sel, btn, stockDiv } = Selector();
-        left.appendChild(wrap);
+    const { wrap, sel, btn, stockDiv } = Selector();
+    left.appendChild(wrap);
 
-        const cartDiv = document.createElement('div');
-        cartDiv.id = 'cart-items';
-        left.appendChild(cartDiv);
+    const cartDiv = document.createElement('div');
+    cartDiv.id = 'cart-items';
+    left.appendChild(cartDiv);
 
-        btn.addEventListener('click', () => onAdd(state));
-        cartDiv.addEventListener('click', (e) => onCartClick(e, state));
+    btn.addEventListener('click', () => onAdd(state));
+    cartDiv.addEventListener('click', (e) => onCartClick(e, state));
 
-        const { helpBtn, modal } = HelpModal();
-        root.append(helpBtn, modal);
+    const { helpBtn, modal } = HelpModal();
+    root.append(helpBtn, modal);
 
-        render(state);
-    }
+    render(state);
+  }
 
-    return { init, state };
+  return { init, state };
 }
 
 createShoppingCart().init();

@@ -1,12 +1,13 @@
 export function Layout() {
-    const grid = document.createElement('div');
-    grid.className = 'grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden';
+  const grid = document.createElement('div');
+  grid.className =
+    'grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 flex-1 overflow-hidden';
 
-    const left = document.createElement('div');
-    left.className = 'bg-white border border-gray-200 p-8 overflow-y-auto';
-    const right = document.createElement('div');
-    right.className = 'bg-black text-white p-8 flex flex-col';
-    right.innerHTML = `
+  const left = document.createElement('div');
+  left.className = 'bg-white border border-gray-200 p-8 overflow-y-auto';
+  const right = document.createElement('div');
+  right.className = 'bg-black text-white p-8 flex flex-col';
+  right.innerHTML = `
 <h2 class="text-xs font-medium mb-5 tracking-extra-wide uppercase">Order Summary</h2>
 <div class="flex-1 flex flex-col">
   <div id="summary-details" class="space-y-3"></div>
@@ -30,5 +31,5 @@ export function Layout() {
 <button class="w-full py-4 bg-white text-black text-sm font-normal uppercase tracking-super-wide cursor-pointer mt-6">Proceed to Checkout</button>
 <p class="mt-4 text-2xs text-white/60 text-center leading-relaxed">Free shipping on all orders.<br><span id="points-notice">Earn loyalty points with purchase.</span></p>
 `;
-    return { grid, left, right };
+  return { grid, left, right };
 }
