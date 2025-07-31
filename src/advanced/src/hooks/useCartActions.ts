@@ -13,7 +13,6 @@ interface UseCartActionsProps {
 export const useCartActions = ({
   productList,
   setProductList,
-  cartState,
   setCartState,
 }: UseCartActionsProps) => {
 
