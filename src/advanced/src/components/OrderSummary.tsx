@@ -23,7 +23,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cartState, productList }) =
             return (
               <div key={item.id} className="flex justify-between text-xs tracking-wide text-gray-400">
                 <span>{product.name} x {item.quantity}</span>
-                <span>₩{(product.val * item.quantity).toLocaleString()}</span>
+                <span data-testid="item-total-price">₩{(product.val * item.quantity).toLocaleString()}</span>
               </div>
             );
           })}
@@ -32,7 +32,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cartState, productList }) =
               <div className="border-t border-white/10 my-3"></div>
               <div className="flex justify-between text-sm tracking-wide">
                 <span>Subtotal</span>
-                <span>₩{totals.subtotal.toLocaleString()}</span>
+                <span data-testid="subtotal-price">₩{totals.subtotal.toLocaleString()}</span>
               </div>
             </>
           )}
@@ -76,7 +76,7 @@ const OrderSummary: React.FC<OrderSummaryProps> = ({ cartState, productList }) =
           <div id="cart-total" className="pt-5 border-t border-white/10">
             <div className="flex justify-between items-baseline">
               <span className="text-sm uppercase tracking-wider">Total</span>
-              <div className="text-2xl tracking-tight">₩{Math.round(totals.amount).toLocaleString()}</div>
+              <div className="text-2xl tracking-tight" data-testid="total-price">₩{Math.round(totals.amount).toLocaleString()}</div>
             </div>
             <div id="loyalty-points" className="text-xs text-blue-400 mt-2 text-right">
               {bonus.point > 0 ? (

@@ -21,6 +21,7 @@ const Selector = ({ productList, lastSelectedProduct, onAdd }: SelectorProps) =>
 
   return (
     <div className="mb-6 pb-6 border-b border-gray-200">
+      <label htmlFor="product-select" className="sr-only">상품 선택</label>
       <select
         id="product-select"
         className="w-full p-3 border border-gray-300 rounded-lg text-base mb-3"
