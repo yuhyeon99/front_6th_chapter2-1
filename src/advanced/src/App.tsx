@@ -28,7 +28,7 @@ function App() {
           const updatedProducts = prevProducts.map(p => {
             if (p.id === luckyItem.id) {
               const newPrice = Math.round(p.originalVal * (1 - DISCOUNT_RATES.LIGHTNING_SALE));
-              // alert(`⚡번개세일! ${p.name}이(가) 20% 할인 중입니다!`);
+              alert(`⚡번개세일! ${p.name}이(가) 20% 할인 중입니다!`);
               return { ...p, val: newPrice, onSale: true };
             }
             return p;
