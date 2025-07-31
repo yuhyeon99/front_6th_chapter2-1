@@ -1,5 +1,5 @@
 import React from 'react';
-import { productList } from './products';
+import { productList } from '../data/products';
 
 interface SelectorProps {
   onAdd: () => void; // onAdd 함수를 prop으로 받음
