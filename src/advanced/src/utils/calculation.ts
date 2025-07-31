@@ -1,5 +1,6 @@
-import { CartState } from '../types/cart';
-import { DISCOUNT_THRESHOLDS, DISCOUNT_RATES, BONUS, PRODUCT_ID_KEYBOARD, PRODUCT_ID_MOUSE, PRODUCT_ID_MONITOR_ARM } from './constants';
+import { CartItem } from '../types/cart';
+import { Product } from '../types/product';
+import { DISCOUNT_THRESHOLDS, DISCOUNT_RATES, BONUS } from './constants';
 
 function calcItemDiscount(pid: string, qty: number): number {
   if (qty < DISCOUNT_THRESHOLDS.ITEM) return 0;
