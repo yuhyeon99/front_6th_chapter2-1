@@ -6,17 +6,25 @@ import HelpModal from './components/HelpModal';
 import Cart from './components/Cart';
 import { useProductState } from './hooks/useProductState';
 import { useCartState } from './hooks/useCartState';
-import { usePointState } from './hooks/usePointState';
 import { calcCartTotals, calcBonusPoints } from './utils/calculation';
+import { ERROR_MESSAGES } from './utils/errorMessages';
 
 function App() {
   const { productList, setProductList } = useProductState();
   const { cartState, setCartState } = useCartState();
-  const { pointState, setPointState } = usePointState();
 
   const handleAdd = (productId: string) => {
     const product = productList.find(p => p.id === productId);
-    if (!product) return;
+    if (!product || product.stock <= 0) {
+      alert(ERROR_MESSAGES.OUT_OF_STOCK);
+      return;
+    }
+
+    setProductList(prev => 
+      prev.map(p => 
+        p.id === productId ? { ...p, stock: p.stock - 1 } : p
+      )
+    );
 
     setCartState(prev => {
       const existingItem = prev.cartItems.find(item => item.id === productId);
@@ -40,11 +48,32 @@ function App() {
     const productId = button.getAttribute('data-product-id');
     const change = parseInt(button.getAttribute('data-change') || '0', 10);
 
+    const product = productList.find(p => p.id === productId);
+    if (!product) return;
+
+    if (change > 0 && product.stock < 1) {
+      alert(ERROR_MESSAGES.OUT_OF_STOCK);
+      return;
+    }
+
     setCartState(prev => {
       const newCartItems = prev.cartItems.map(item => {
         if (item.id === productId) {
           const newQuantity = item.quantity + change;
-          return newQuantity > 0 ? { ...item, quantity: newQuantity } : null;
+          if (newQuantity <= 0) {
+            setProductList(prevProducts => 
+              prevProducts.map(p => 
+                p.id === productId ? { ...p, stock: p.stock + item.quantity } : p
+              )
+            );
+            return null;
+          }
+          setProductList(prevProducts => 
+            prevProducts.map(p => 
+              p.id === productId ? { ...p, stock: p.stock - change } : p
+            )
+          );
+          return { ...item, quantity: newQuantity };
         }
         return item;
       }).filter(Boolean) as any;
