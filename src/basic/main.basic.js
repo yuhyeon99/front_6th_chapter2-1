@@ -27,7 +27,7 @@ function createShoppingCart() {
     root.appendChild(grid);
     grid.append(left, right);
 
-    const { wrap, sel, btn, stockDiv } = Selector();
+    const { wrap, btn } = Selector();
     left.appendChild(wrap);
 
     const cartDiv = document.createElement('div');
