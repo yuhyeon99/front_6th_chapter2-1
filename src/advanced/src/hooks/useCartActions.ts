@@ -15,30 +15,37 @@ export const useCartActions = ({
   setProductList,
   setCartState,
 }: UseCartActionsProps) => {
-
   const handleAdd = (productId: string) => {
-    const product = productList.find(p => p.id === productId);
+    const product = productList.find((p) => p.id === productId);
     if (!product || product.stock <= 0) {
       alert(ERROR_MESSAGES.OUT_OF_STOCK);
       return;
     }
 
-    setProductList(prev => 
-      prev.map(p => 
-        p.id === productId ? { ...p, stock: p.stock - 1 } : p
-      )
+    setProductList((prev) =>
+      prev.map((p) => (p.id === productId ? { ...p, stock: p.stock - 1 } : p))
     );
 
-    setCartState(prev => {
-      const existingItem = prev.cartItems.find(item => item.id === productId);
+    setCartState((prev) => {
+      const existingItem = prev.cartItems.find((item) => item.id === productId);
       if (existingItem) {
-        const newCartItems = prev.cartItems.map(item =>
-          item.id === productId ? { ...item, quantity: item.quantity + 1 } : item
+        const newCartItems = prev.cartItems.map((item) =>
+          item.id === productId
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
         );
-        return { ...prev, cartItems: newCartItems, lastSelectedProduct: product };
+        return {
+          ...prev,
+          cartItems: newCartItems,
+          lastSelectedProduct: product,
+        };
       } else {
         const newCartItems = [...prev.cartItems, { ...product, quantity: 1 }];
-        return { ...prev, cartItems: newCartItems, lastSelectedProduct: product };
+        return {
+          ...prev,
+          cartItems: newCartItems,
+          lastSelectedProduct: product,
+        };
       }
     });
   };
@@ -52,24 +59,30 @@ export const useCartActions = ({
     if (!productId) return;
 
     if (button.classList.contains('remove-item')) {
-      setCartState(prev => {
-        const itemToRemove = prev.cartItems.find(item => item.id === productId);
+      setCartState((prev) => {
+        const itemToRemove = prev.cartItems.find(
+          (item) => item.id === productId
+        );
         if (!itemToRemove) return prev;
 
-        setProductList(prevProducts => 
-          prevProducts.map(p => 
-            p.id === productId ? { ...p, stock: p.stock + itemToRemove.quantity } : p
+        setProductList((prevProducts) =>
+          prevProducts.map((p) =>
+            p.id === productId
+              ? { ...p, stock: p.stock + itemToRemove.quantity }
+              : p
           )
         );
 
-        const newCartItems = prev.cartItems.filter(item => item.id !== productId);
+        const newCartItems = prev.cartItems.filter(
+          (item) => item.id !== productId
+        );
         return { ...prev, cartItems: newCartItems };
       });
       return;
     }
 
     const change = parseInt(button.getAttribute('data-change') || '0', 10);
-    const product = productList.find(p => p.id === productId);
+    const product = productList.find((p) => p.id === productId);
     if (!product) return;
 
     if (change > 0 && product.stock < 1) {
@@ -77,27 +90,31 @@ export const useCartActions = ({
       return;
     }
 
-    setCartState(prev => {
-      const newCartItems = prev.cartItems.map(item => {
-        if (item.id === productId) {
-          const newQuantity = item.quantity + change;
-          if (newQuantity <= 0) {
-            setProductList(prevProducts => 
-              prevProducts.map(p => 
-                p.id === productId ? { ...p, stock: p.stock + item.quantity } : p
+    setCartState((prev) => {
+      const newCartItems = prev.cartItems
+        .map((item) => {
+          if (item.id === productId) {
+            const newQuantity = item.quantity + change;
+            if (newQuantity <= 0) {
+              setProductList((prevProducts) =>
+                prevProducts.map((p) =>
+                  p.id === productId
+                    ? { ...p, stock: p.stock + item.quantity }
+                    : p
+                )
+              );
+              return null;
+            }
+            setProductList((prevProducts) =>
+              prevProducts.map((p) =>
+                p.id === productId ? { ...p, stock: p.stock - change } : p
               )
             );
-            return null;
+            return { ...item, quantity: newQuantity };
           }
-          setProductList(prevProducts => 
-            prevProducts.map(p => 
-              p.id === productId ? { ...p, stock: p.stock - change } : p
-            )
-          );
-          return { ...item, quantity: newQuantity };
-        }
-        return item;
-      }).filter(Boolean) as any;
+          return item;
+        })
+        .filter(Boolean) as any;
 
       return { ...prev, cartItems: newCartItems };
     });

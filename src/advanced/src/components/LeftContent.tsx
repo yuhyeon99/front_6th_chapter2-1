@@ -21,15 +21,15 @@ const LeftContent: React.FC<LeftContentProps> = ({
 }) => {
   return (
     <>
-      <Selector 
-        productList={productList} 
-        lastSelectedProduct={lastSelectedProduct} 
-        onAdd={onAdd} 
+      <Selector
+        productList={productList}
+        lastSelectedProduct={lastSelectedProduct}
+        onAdd={onAdd}
       />
-      <Cart 
+      <Cart
         cartItems={cartItems}
         productList={productList}
-        onCartClick={onCartClick} 
+        onCartClick={onCartClick}
       />
     </>
   );

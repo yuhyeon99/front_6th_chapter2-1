@@ -8,11 +8,51 @@ import * as useCartActionsModule from '../src/hooks/useCartActions';
 
 // 목업 데이터 정의
 const mockProducts = [
-  { id: '1', name: 'Product A', val: 10000, originalVal: 10000, stock: 5, onSale: false, suggestSale: false },
-  { id: '2', name: 'Product B', val: 20000, originalVal: 20000, stock: 3, onSale: false, suggestSale: false },
-  { id: '3', name: 'Product C (On Sale)', val: 7500, originalVal: 10000, stock: 2, onSale: true, suggestSale: false },
-  { id: '4', name: 'Product D (Suggest Sale)', val: 9500, originalVal: 10000, stock: 1, onSale: false, suggestSale: true },
-  { id: '5', name: 'Product E (Sold Out)', val: 5000, originalVal: 5000, stock: 0, onSale: false, suggestSale: false },
+  {
+    id: '1',
+    name: 'Product A',
+    val: 10000,
+    originalVal: 10000,
+    stock: 5,
+    onSale: false,
+    suggestSale: false,
+  },
+  {
+    id: '2',
+    name: 'Product B',
+    val: 20000,
+    originalVal: 20000,
+    stock: 3,
+    onSale: false,
+    suggestSale: false,
+  },
+  {
+    id: '3',
+    name: 'Product C (On Sale)',
+    val: 7500,
+    originalVal: 10000,
+    stock: 2,
+    onSale: true,
+    suggestSale: false,
+  },
+  {
+    id: '4',
+    name: 'Product D (Suggest Sale)',
+    val: 9500,
+    originalVal: 10000,
+    stock: 1,
+    onSale: false,
+    suggestSale: true,
+  },
+  {
+    id: '5',
+    name: 'Product E (Sold Out)',
+    val: 5000,
+    originalVal: 5000,
+    stock: 0,
+    onSale: false,
+    suggestSale: false,
+  },
 ];
 
 const mockCartState = {
@@ -54,7 +94,9 @@ describe('App Component', () => {
     });
 
     // useLightningSale 훅은 호출만 되도록 목업합니다.
-    (useLightningSaleModule.useLightningSale as Mock).mockImplementation(() => {});
+    (useLightningSaleModule.useLightningSale as Mock).mockImplementation(
+      () => {}
+    );
 
     // useCartActions 훅의 기본 목업 구현
     (useCartActionsModule.useCartActions as Mock).mockReturnValue({
@@ -105,7 +147,9 @@ describe('App Component', () => {
 
     render(<App />);
     // `add-to-cart` id를 가진 버튼을 찾아 클릭 (여러 개일 경우 첫 번째)
-    const addButton = screen.getAllByRole('button', { name: /Add to Cart/i })[0];
+    const addButton = screen.getAllByRole('button', {
+      name: /Add to Cart/i,
+    })[0];
     fireEvent.click(addButton);
 
     // handleAdd 함수가 호출되었는지 확인
@@ -133,6 +177,6 @@ describe('App Component', () => {
   it('useLightningSale 훅이 App 컴포넌트 렌더링 시 호출되어야 합니다.', () => {
     render(<App />);
     // 호출 횟수에 대한 엄격한 검증 대신 호출 여부만 확인
-    expect((useLightningSaleModule.useLightningSale as Mock)).toHaveBeenCalled();
+    expect(useLightningSaleModule.useLightningSale as Mock).toHaveBeenCalled();
   });
 });

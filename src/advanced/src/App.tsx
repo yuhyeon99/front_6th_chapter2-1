@@ -24,21 +24,18 @@ function App() {
   return (
     <>
       <Header itemCount={cartState.cartItems.length} />
-      <Layout 
+      <Layout
         leftContent={
-          <LeftContent 
-            productList={productList} 
-            lastSelectedProduct={cartState.lastSelectedProduct} 
-            onAdd={handleAdd} 
+          <LeftContent
+            productList={productList}
+            lastSelectedProduct={cartState.lastSelectedProduct}
+            onAdd={handleAdd}
             onCartClick={handleCartClick}
             cartItems={cartState.cartItems}
           />
         }
         rightContent={
-          <OrderSummary 
-            cartState={cartState} 
-            productList={productList} 
-          />
+          <OrderSummary cartState={cartState} productList={productList} />
         }
       />
       <HelpModal />

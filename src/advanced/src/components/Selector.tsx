@@ -8,9 +8,13 @@ interface SelectorProps {
   onAdd: (productId: string) => void;
 }
 
-const Selector = ({ productList, lastSelectedProduct, onAdd }: SelectorProps) => {
+const Selector = ({
+  productList,
+  lastSelectedProduct,
+  onAdd,
+}: SelectorProps) => {
   const [selectedProductId, setSelectedProductId] = useState<string>(
-    lastSelectedProduct?.id || (productList.find(p => p.stock > 0)?.id ?? '')
+    lastSelectedProduct?.id || (productList.find((p) => p.stock > 0)?.id ?? '')
   );
 
   const handleAddClick = () => {
@@ -21,7 +25,9 @@ const Selector = ({ productList, lastSelectedProduct, onAdd }: SelectorProps) =>
 
   return (
     <div className="mb-6 pb-6 border-b border-gray-200">
-      <label htmlFor="product-select" className="sr-only">상품 선택</label>
+      <label htmlFor="product-select" className="sr-only">
+        상품 선택
+      </label>
       <select
         id="product-select"
         className="w-full p-3 border border-gray-300 rounded-lg text-base mb-3"
@@ -29,7 +35,7 @@ const Selector = ({ productList, lastSelectedProduct, onAdd }: SelectorProps) =>
         onChange={(e) => setSelectedProductId(e.target.value)}
         style={{ borderColor: totalStock < 50 ? 'orange' : '' }}
       >
-        {productList.map(product => {
+        {productList.map((product) => {
           let optionText = `${product.name} - ${product.val.toLocaleString()}원`;
           let optionClass = '';
 
@@ -50,7 +56,12 @@ const Selector = ({ productList, lastSelectedProduct, onAdd }: SelectorProps) =>
           }
 
           return (
-            <option key={product.id} value={product.id} disabled={product.stock === 0} className={optionClass}>
+            <option
+              key={product.id}
+              value={product.id}
+              disabled={product.stock === 0}
+              className={optionClass}
+            >
               {optionText}
             </option>
           );
@@ -60,23 +71,31 @@ const Selector = ({ productList, lastSelectedProduct, onAdd }: SelectorProps) =>
         id="add-to-cart"
         className="w-full py-3 bg-black text-white text-sm font-medium uppercase tracking-wider hover:bg-gray-800 transition-all"
         onClick={handleAddClick}
-        disabled={!selectedProductId || productList.find(p => p.id === selectedProductId)?.stock === 0}
+        disabled={
+          !selectedProductId ||
+          productList.find((p) => p.id === selectedProductId)?.stock === 0
+        }
       >
         Add to Cart
       </button>
-      <div id="stock-status" className="text-xs text-red-500 mt-3 whitespace-pre-line">
-        {productList.map(p => {
-          if (p.stock === 0) {
-            return `${p.name}: 품절`;
-          } else if (p.stock < STOCK_ALERT) {
-            return `${p.name}: 재고 부족 (${p.stock}개 남음)`;
-          }
-          return null;
-        }).filter(Boolean).join('\n')}
+      <div
+        id="stock-status"
+        className="text-xs text-red-500 mt-3 whitespace-pre-line"
+      >
+        {productList
+          .map((p) => {
+            if (p.stock === 0) {
+              return `${p.name}: 품절`;
+            } else if (p.stock < STOCK_ALERT) {
+              return `${p.name}: 재고 부족 (${p.stock}개 남음)`;
+            }
+            return null;
+          })
+          .filter(Boolean)
+          .join('\n')}
       </div>
     </div>
   );
 };
 
 export default Selector;
-

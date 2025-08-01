@@ -14,7 +14,11 @@ function calcItemDiscount(pid: string, qty: number): number {
   return rates[pid] || 0;
 }
 
-export function calcCartTotals(cartItems: CartItem[], productList: Product[], date: Date = new Date()) {
+export function calcCartTotals(
+  cartItems: CartItem[],
+  productList: Product[],
+  date: Date = new Date()
+) {
   let subtotal = 0;
   let amount = 0;
   const itemDiscounts: { name: string; discount: number }[] = [];
@@ -22,13 +26,14 @@ export function calcCartTotals(cartItems: CartItem[], productList: Product[], da
   const itemCnt = cartItems.reduce((acc, c) => acc + c.quantity, 0);
 
   cartItems.forEach((ci) => {
-    const product = productList.find(p => p.id === ci.id);
+    const product = productList.find((p) => p.id === ci.id);
     if (!product) return;
 
     const itemPrice = product.val * ci.quantity;
     subtotal += itemPrice;
     const rate = calcItemDiscount(ci.id, ci.quantity);
-    if (rate > 0) itemDiscounts.push({ name: product.name, discount: rate * 100 });
+    if (rate > 0)
+      itemDiscounts.push({ name: product.name, discount: rate * 100 });
     amount += itemPrice * (1 - rate);
   });
 
@@ -42,8 +47,8 @@ export function calcCartTotals(cartItems: CartItem[], productList: Product[], da
 
   const isTue = date.getDay() === 2;
   if (isTue && amount > 0) {
-    amount *= (1 - DISCOUNT_RATES.TUESDAY);
-    discountRate = 1 - (amount / originalTotal);
+    amount *= 1 - DISCOUNT_RATES.TUESDAY;
+    discountRate = 1 - amount / originalTotal;
   }
 
   return {
@@ -57,7 +62,11 @@ export function calcCartTotals(cartItems: CartItem[], productList: Product[], da
   };
 }
 
-export function calcBonusPoints(cartItems: CartItem[], productList: Product[], date: Date = new Date()) {
+export function calcBonusPoints(
+  cartItems: CartItem[],
+  productList: Product[],
+  date: Date = new Date()
+) {
   const { amount, itemCnt } = calcCartTotals(cartItems, productList, date);
   let base = Math.floor(amount / 1000);
   let pt = base;

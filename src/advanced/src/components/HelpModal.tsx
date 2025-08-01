@@ -7,11 +7,14 @@ const HelpModal = () => {
     setIsOpen((prev) => !prev);
   }, []);
 
-  const handleOverlayClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      setIsOpen(false);
-    }
-  }, []);
+  const handleOverlayClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.target === e.currentTarget) {
+        setIsOpen(false);
+      }
+    },
+    []
+  );
 
   return (
     <>
@@ -20,8 +23,18 @@ const HelpModal = () => {
         onClick={toggleModal}
         aria-label="도움말"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        <svg
+          className="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
         </svg>
       </button>
 
@@ -36,8 +49,18 @@ const HelpModal = () => {
               className="absolute top-4 right-4 text-gray-500 hover:text-black"
               onClick={toggleModal}
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                ></path>
               </svg>
             </button>
             <h2 className="text-xl font-bold mb-4">📖 이용 안내</h2>
@@ -48,10 +71,12 @@ const HelpModal = () => {
                 <div className="bg-gray-100 rounded-lg p-3">
                   <p className="font-semibold text-sm mb-1">개별 상품</p>
                   <p className="text-gray-700 text-xs pl-2">
-                    • 키보드 10개↑: 10%<br />
-                    • 마우스 10개↑: 15%<br />
-                    • 모니터암 10개↑: 20%<br />
-                    • 스피커 10개↑: 25%
+                    • 키보드 10개↑: 10%
+                    <br />
+                    • 마우스 10개↑: 15%
+                    <br />
+                    • 모니터암 10개↑: 20%
+                    <br />• 스피커 10개↑: 25%
                   </p>
                 </div>
 
@@ -63,9 +88,10 @@ const HelpModal = () => {
                 <div className="bg-gray-100 rounded-lg p-3">
                   <p className="font-semibold text-sm mb-1">특별 할인</p>
                   <p className="text-gray-700 text-xs pl-2">
-                    • 화요일: +10%<br />
-                    • ⚡번개세일: 20%<br />
-                    • 💝추천할인: 5%
+                    • 화요일: +10%
+                    <br />
+                    • ⚡번개세일: 20%
+                    <br />• 💝추천할인: 5%
                   </p>
                 </div>
               </div>
@@ -82,10 +108,12 @@ const HelpModal = () => {
                 <div className="bg-gray-100 rounded-lg p-3">
                   <p className="font-semibold text-sm mb-1">추가</p>
                   <p className="text-gray-700 text-xs pl-2">
-                    • 화요일: 2배<br />
-                    • 키보드+마우스: +50p<br />
-                    • 풀세트: +100p<br />
-                    • 10개↑: +20p / 20개↑: +50p / 30개↑: +100p
+                    • 화요일: 2배
+                    <br />
+                    • 키보드+마우스: +50p
+                    <br />
+                    • 풀세트: +100p
+                    <br />• 10개↑: +20p / 20개↑: +50p / 30개↑: +100p
                   </p>
                 </div>
               </div>
@@ -94,9 +122,10 @@ const HelpModal = () => {
             <div className="border-t border-gray-200 pt-4 mt-4">
               <p className="text-xs font-bold mb-1">💡 TIP</p>
               <p className="text-2xs text-gray-600 leading-relaxed">
-                • 화요일 대량구매 = MAX 혜택<br />
-                • ⚡+💝 중복 가능<br />
-                • 상품4 = 품절
+                • 화요일 대량구매 = MAX 혜택
+                <br />
+                • ⚡+💝 중복 가능
+                <br />• 상품4 = 품절
               </p>
             </div>
           </div>

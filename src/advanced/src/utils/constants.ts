@@ -4,14 +4,14 @@ export const DISCOUNT_THRESHOLDS = {
 };
 
 export const DISCOUNT_RATES = {
-  p1: 0.10, // 키보드 10개 이상 10%
+  p1: 0.1, // 키보드 10개 이상 10%
   p2: 0.15, // 마우스 10개 이상 15%
-  p3: 0.20, // 모니터암 10개 이상 20%
+  p3: 0.2, // 모니터암 10개 이상 20%
   p4: 0.05, // 파우치 10개 이상 5%
   p5: 0.25, // 스피커 10개 이상 25%
   BULK: 0.25, // 30개 이상 25%
-  TUESDAY: 0.10, // 화요일 10%
-  LIGHTNING_SALE: 0.20, // 번개세일 20%
+  TUESDAY: 0.1, // 화요일 10%
+  LIGHTNING_SALE: 0.2, // 번개세일 20%
   SUGGEST_SALE: 0.05, // 추천할인 5%
 };
 
