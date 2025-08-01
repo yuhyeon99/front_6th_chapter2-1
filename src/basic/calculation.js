@@ -25,7 +25,12 @@ export function calcCartTotals(st, date = new Date()) {
     const itemPrice = p.price * ci.qty;
     subtotal += itemPrice;
     const rate = calcItemDiscount(ci.id, ci.qty);
-    if (rate > 0) itemDiscounts.push({ name: p.name, discount: rate * 100, threshold: DISCOUNT_THRESHOLDS.ITEM });
+    if (rate > 0)
+      itemDiscounts.push({
+        name: p.name,
+        discount: rate * 100,
+        threshold: DISCOUNT_THRESHOLDS.ITEM,
+      });
     amount += itemPrice * (1 - rate);
   });
 

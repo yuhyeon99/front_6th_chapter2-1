@@ -5,7 +5,9 @@ export function startLightningSale(state) {
 
   setTimeout(() => {
     setInterval(() => {
-      const availableProducts = state.productList.filter(p => p.stock > 0 && !p.onSale);
+      const availableProducts = state.productList.filter(
+        (p) => p.stock > 0 && !p.onSale
+      );
       if (availableProducts.length > 0) {
         const luckyIdx = Math.floor(Math.random() * availableProducts.length);
         const luckyItem = availableProducts[luckyIdx];

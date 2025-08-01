@@ -60,14 +60,17 @@ export function render(state) {
     }
     row.querySelector('.quantity-number').textContent = ci.qty;
     const product = state.productList.find((p) => p.id === ci.id);
-    const individualPriceHtml = product.onSale || product.suggest
-      ? `<span class="line-through text-gray-400">₩${product.originalPrice.toLocaleString()}</span> <span class="text-red-500">₩${product.price.toLocaleString()}</span>`
-      : `₩${product.price.toLocaleString()}`;
-    row.querySelector('.text-xs.text-black.mb-3').innerHTML = individualPriceHtml;
+    const individualPriceHtml =
+      product.onSale || product.suggest
+        ? `<span class="line-through text-gray-400">₩${product.originalPrice.toLocaleString()}</span> <span class="text-red-500">₩${product.price.toLocaleString()}</span>`
+        : `₩${product.price.toLocaleString()}`;
+    row.querySelector('.text-xs.text-black.mb-3').innerHTML =
+      individualPriceHtml;
 
-    const totalPriceHtml = product.onSale || product.suggest
-      ? `<span class="line-through text-gray-400">₩${(product.originalPrice * ci.qty).toLocaleString()}</span> <span class="text-red-500">₩${(product.price * ci.qty).toLocaleString()}</span>`
-      : `₩${(product.price * ci.qty).toLocaleString()}`;
+    const totalPriceHtml =
+      product.onSale || product.suggest
+        ? `<span class="line-through text-gray-400">₩${(product.originalPrice * ci.qty).toLocaleString()}</span> <span class="text-red-500">₩${(product.price * ci.qty).toLocaleString()}</span>`
+        : `₩${(product.price * ci.qty).toLocaleString()}`;
     row.querySelector('.text-lg').innerHTML = totalPriceHtml;
   });
   [...cartWrap.children].forEach((el) => {
@@ -87,8 +90,8 @@ export function render(state) {
   let summaryHtml = ''; // Initialize summaryHtml
 
   if (state.totals.originalTotal > 0) {
-    state.cartItems.forEach(ci => {
-      const product = state.productList.find(p => p.id === ci.id);
+    state.cartItems.forEach((ci) => {
+      const product = state.productList.find((p) => p.id === ci.id);
       if (product) {
         summaryHtml += `
           <div class="flex justify-between text-xs tracking-wide text-gray-400">
@@ -116,8 +119,12 @@ export function render(state) {
       `;
     }
 
-    if (state.totals.bulkDiscountRate === 0 && state.totals.itemDiscounts && state.totals.itemDiscounts.length > 0) {
-      state.totals.itemDiscounts.forEach(item => {
+    if (
+      state.totals.bulkDiscountRate === 0 &&
+      state.totals.itemDiscounts &&
+      state.totals.itemDiscounts.length > 0
+    ) {
+      state.totals.itemDiscounts.forEach((item) => {
         summaryHtml += `
           <div class="flex justify-between text-sm tracking-wide text-green-400">
             <span class="text-xs">${item.name} (${item.threshold}개↑)</span>

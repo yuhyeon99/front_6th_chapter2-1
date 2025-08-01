@@ -17,10 +17,7 @@ const CartItem = ({ item, productList }: CartItemProps) => {
           <span className="line-through text-gray-400">
             ₩{product.originalVal.toLocaleString()}
           </span>
-          <span className="text-red-500">
-            {' '}
-            ₩{product.val.toLocaleString()}
-          </span>
+          <span className="text-red-500"> ₩{product.val.toLocaleString()}</span>
         </>
       );
     } else {

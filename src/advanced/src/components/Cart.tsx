@@ -23,7 +23,9 @@ const Cart = ({ cartItems, productList, onCartClick }: CartProps) => {
         </p>
       ) : (
         cartItems.map((item) => {
-          return <CartItem key={item.id} item={item} productList={productList} />;
+          return (
+            <CartItem key={item.id} item={item} productList={productList} />
+          );
         })
       )}
     </div>
