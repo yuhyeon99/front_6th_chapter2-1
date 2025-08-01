@@ -25,14 +25,19 @@ export function calcCartTotals(st, date = new Date()) {
     const itemPrice = p.price * ci.qty;
     subtotal += itemPrice;
     const rate = calcItemDiscount(ci.id, ci.qty);
-    if (rate > 0) itemDiscounts.push({ name: p.name, discount: rate * 100 });
+    if (rate > 0) itemDiscounts.push({ name: p.name, discount: rate * 100, threshold: DISCOUNT_THRESHOLDS.ITEM });
     amount += itemPrice * (1 - rate);
   });
 
   let discountRate = subtotal > 0 ? (subtotal - amount) / subtotal : 0;
+  let bulkDiscountRate = 0;
+  let bulkDiscountThreshold = 0;
+
   if (itemCnt >= DISCOUNT_THRESHOLDS.BULK) {
     amount = subtotal * (1 - DISCOUNT_RATES.BULK);
     discountRate = DISCOUNT_RATES.BULK;
+    bulkDiscountRate = DISCOUNT_RATES.BULK;
+    bulkDiscountThreshold = DISCOUNT_THRESHOLDS.BULK;
   }
 
   const isTue = date.getDay() === 2;
@@ -49,6 +54,8 @@ export function calcCartTotals(st, date = new Date()) {
     discountRate,
     isTue,
     originalTotal: subtotal,
+    bulkDiscountRate,
+    bulkDiscountThreshold,
   };
 }
 

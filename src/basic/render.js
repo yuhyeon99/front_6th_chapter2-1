@@ -64,6 +64,68 @@ export function render(state) {
     tue.classList.remove('hidden');
   else tue.classList.add('hidden');
 
+  const summaryDetails = $('#summary-details');
+  let summaryHtml = ''; // Initialize summaryHtml
+
+  if (state.totals.originalTotal > 0) {
+    state.cartItems.forEach(ci => {
+      const product = state.productList.find(p => p.id === ci.id);
+      if (product) {
+        summaryHtml += `
+          <div class="flex justify-between text-xs tracking-wide text-gray-400">
+            <span>${product.name} x ${ci.qty}</span>
+            <span>₩${(product.price * ci.qty).toLocaleString()}</span>
+          </div>
+        `;
+      }
+    });
+
+    summaryHtml += `
+      <div class="border-t border-white/10 my-3"></div>
+      <div class="flex justify-between text-sm tracking-wide">
+        <span>Subtotal</span>
+        <span>₩${state.totals.originalTotal.toLocaleString()}</span>
+      </div>
+    `;
+
+    if (state.totals.bulkDiscountRate > 0) {
+      summaryHtml += `
+        <div class="flex justify-between text-sm tracking-wide text-green-400">
+          <span class="text-xs">🎉 대량구매 할인 (${state.totals.bulkDiscountThreshold}개 이상)</span>
+          <span class="text-xs">-${(state.totals.bulkDiscountRate * 100).toFixed(1)}%</span>
+        </div>
+      `;
+    }
+
+    if (state.totals.bulkDiscountRate === 0 && state.totals.itemDiscounts && state.totals.itemDiscounts.length > 0) {
+      state.totals.itemDiscounts.forEach(item => {
+        summaryHtml += `
+          <div class="flex justify-between text-sm tracking-wide text-green-400">
+            <span class="text-xs">${item.name} (${item.threshold}개↑)</span>
+            <span class="text-xs">-${item.discount}%</span>
+          </div>
+        `;
+      });
+    }
+
+    if (state.totals.isTue && state.totals.amount > 0) {
+      summaryHtml += `
+        <div class="flex justify-between text-sm tracking-wide text-purple-400">
+          <span class="text-xs">🌟 화요일 추가 할인</span>
+          <span class="text-xs">-10%</span>
+        </div>
+      `;
+    }
+
+    summaryHtml += `
+      <div class="flex justify-between text-sm tracking-wide text-gray-400">
+        <span>Shipping</span>
+        <span>Free</span>
+      </div>
+    `;
+  }
+  summaryDetails.innerHTML = summaryHtml; // Assign accumulated HTML
+
   const discDiv = $('#discount-info');
   discDiv.innerHTML = '';
   if (state.totals.discountRate > 0) {
