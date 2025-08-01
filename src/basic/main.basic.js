@@ -7,6 +7,7 @@ import { Layout } from './components/Layout.js';
 import { Selector } from './components/Selector.js';
 import { HelpModal } from './components/HelpModal.js';
 import { render } from './render.js';
+import { startLightningSale } from './product/lightningSale.js';
 
 function createShoppingCart() {
   const state = {
@@ -41,6 +42,7 @@ function createShoppingCart() {
     root.append(helpBtn, modal);
 
     render(state);
+    startLightningSale(state);
   }
 
   return { init, state };

@@ -16,7 +16,19 @@ function renderProductOptions(state) {
       opt.textContent = `${p.name} - ${p.price}원 (품절)`;
       opt.className = 'text-gray-400';
     } else {
-      opt.textContent = `${p.name} - ${p.price}원`;
+      let discountText = '';
+      if (p.onSale && p.suggest) {
+        opt.textContent = `⚡💝${p.name} - ${p.originalPrice}원 → ${p.price}원 (25% SUPER SALE!)`;
+        opt.className = 'text-purple-600 font-bold';
+      } else if (p.onSale) {
+        opt.textContent = `⚡${p.name} - ${p.originalPrice}원 → ${p.price}원 (20% SALE!)`;
+        opt.className = 'text-red-500 font-bold';
+      } else if (p.suggest) {
+        opt.textContent = `💝${p.name} - ${p.originalPrice}원 → ${p.price}원 (5% 추천할인!)`;
+        opt.className = 'text-blue-500 font-bold';
+      } else {
+        opt.textContent = `${p.name} - ${p.price}원`;
+      }
     }
     sel.appendChild(opt);
   });
@@ -47,9 +59,16 @@ export function render(state) {
       cartWrap.appendChild(row);
     }
     row.querySelector('.quantity-number').textContent = ci.qty;
-    const price = state.productList.find((p) => p.id === ci.id).price;
-    row.querySelector('.text-lg').textContent =
-      `₩${(price * ci.qty).toLocaleString()}`;
+    const product = state.productList.find((p) => p.id === ci.id);
+    const individualPriceHtml = product.onSale || product.suggest
+      ? `<span class="line-through text-gray-400">₩${product.originalPrice.toLocaleString()}</span> <span class="text-red-500">₩${product.price.toLocaleString()}</span>`
+      : `₩${product.price.toLocaleString()}`;
+    row.querySelector('.text-xs.text-black.mb-3').innerHTML = individualPriceHtml;
+
+    const totalPriceHtml = product.onSale || product.suggest
+      ? `<span class="line-through text-gray-400">₩${(product.originalPrice * ci.qty).toLocaleString()}</span> <span class="text-red-500">₩${(product.price * ci.qty).toLocaleString()}</span>`
+      : `₩${(product.price * ci.qty).toLocaleString()}`;
+    row.querySelector('.text-lg').innerHTML = totalPriceHtml;
   });
   [...cartWrap.children].forEach((el) => {
     if (!alive.has(el.id)) el.remove();
