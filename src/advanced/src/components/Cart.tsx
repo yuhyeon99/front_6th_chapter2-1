@@ -11,7 +11,7 @@ interface CartProps {
 
 const Cart = ({ cartItems, productList, onCartClick }: CartProps) => {
   return (
-    <div id="cart-items" onClick={onCartClick}>
+    <div id="cart-items" role="group" aria-label="Cart Items" onClick={onCartClick}>
       {cartItems.length === 0 ? (
         <p className="text-center text-gray-500 py-10">장바구니가 비어있습니다.</p>
       ) : (
