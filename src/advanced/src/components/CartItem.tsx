@@ -3,46 +3,28 @@ import { Product } from '../types/product';
 
 interface CartItemProps {
   item: CartItemType;
-  product: Product;
+  productList: Product[];
 }
 
-const CartItem = ({ item, product }: CartItemProps) => {
+const CartItem = ({ item, productList }: CartItemProps) => {
+  const product = productList.find((p) => p.id === item.id);
+
+  if (!product) return null; // product가 없을 경우 렌더링하지 않음
   const priceDisplay = () => {
-    if (product.onSale && product.suggestSale) {
+    if (product.onSale || product.suggestSale) {
       return (
         <>
           <span className="line-through text-gray-400">
             ₩{product.originalVal.toLocaleString()}
           </span>
-          <span className="text-purple-600">
-            {' '}
-            ₩{product.val.toLocaleString()}
-          </span>
-        </>
-      );
-    } else if (product.onSale) {
-      return (
-        <>
-          <span className="line-through text-gray-400">
-            ₩{product.originalVal.toLocaleString()}
-          </span>
-          <span className="text-red-500"> ₩{product.val.toLocaleString()}</span>
-        </>
-      );
-    } else if (product.suggestSale) {
-      return (
-        <>
-          <span className="line-through text-gray-400">
-            ₩{product.originalVal.toLocaleString()}
-          </span>
-          <span className="text-blue-500">
+          <span className="text-red-500">
             {' '}
             ₩{product.val.toLocaleString()}
           </span>
         </>
       );
     } else {
-      return `₩${product.val.toLocaleString()}`;
+      return <span>₩{product.val.toLocaleString()}</span>;
     }
   };
 
@@ -98,7 +80,19 @@ const CartItem = ({ item, product }: CartItemProps) => {
           className="text-lg mb-2 tracking-tight tabular-nums"
           data-testid="cart-item-total-price"
         >
-          ₩{(product.val * item.quantity).toLocaleString()}
+          {product.onSale || product.suggestSale ? (
+            <>
+              <span className="line-through text-gray-400">
+                ₩{(product.originalVal * item.quantity).toLocaleString()}
+              </span>
+              <span className="text-red-500">
+                {' '}
+                ₩{(product.val * item.quantity).toLocaleString()}
+              </span>
+            </>
+          ) : (
+            <span>₩{(product.val * item.quantity).toLocaleString()}</span>
+          )}
         </div>
         <a
           className="remove-item text-2xs text-gray-500 uppercase tracking-wider cursor-pointer transition-colors border-b border-transparent hover:text-black hover:border-black"

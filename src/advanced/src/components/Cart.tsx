@@ -23,9 +23,7 @@ const Cart = ({ cartItems, productList, onCartClick }: CartProps) => {
         </p>
       ) : (
         cartItems.map((item) => {
-          const product = productList.find((p) => p.id === item.id);
-          if (!product) return null;
-          return <CartItem key={item.id} item={item} product={product} />;
+          return <CartItem key={item.id} item={item} productList={productList} />;
         })
       )}
     </div>
